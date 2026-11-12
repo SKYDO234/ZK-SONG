@@ -43,7 +43,7 @@ const ENDPOINTS = [
 ];
 
 export default function ApiKeyManagement() {
-  const { authFetch, notify, demoApiKey } = useApp();
+  const { authFetch, notify } = useApp();
   const [keys, setKeys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState({});
@@ -86,9 +86,9 @@ export default function ApiKeyManagement() {
   useEffect(() => {
     if (!sandboxKey) {
       const firstActive = keys.find((k) => k.status === 'active');
-      setSandboxKey(firstActive?.api_key || demoApiKey || '');
+      setSandboxKey(firstActive?.api_key || '');
     }
-  }, [keys, demoApiKey, sandboxKey]);
+  }, [keys, sandboxKey]);
 
   const createKey = async (e) => {
     e.preventDefault();
@@ -303,8 +303,8 @@ export default function ApiKeyManagement() {
             )}
           </SectionCard>
 
-          {/* Sandbox */}
-          <SectionCard title="Live API Sandbox" subtitle="Execute real authenticated requests against the public REST API">
+          {/* Request playground */}
+          <SectionCard title="API Request Playground" subtitle="Execute real authenticated requests against the public REST API">
             <div className="p-4 space-y-3">
               <div className="grid sm:grid-cols-2 gap-2.5">
                 <div>
@@ -373,7 +373,7 @@ export default function ApiKeyManagement() {
       {
         'content-type': 'application/json',
         'x-powered-by': 'ZK-SONG-Engine/2.6',
-        'x-authenticated-client': keys.find((k) => k.api_key === sandboxKey)?.name || 'demo',
+        'x-authenticated-client': keys.find((k) => k.api_key === sandboxKey)?.name || 'unauthenticated',
       },
       null,
       2

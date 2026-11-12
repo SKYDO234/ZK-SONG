@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   Eye,
 } from 'lucide-react';
+import { monogramAvatar } from '../../components/avatar';
 import { useApp } from '../../context/AppContext';
 import DashboardLayout from '../../components/DashboardLayout';
 import {
@@ -141,7 +142,7 @@ export default function PlatformSettings() {
             <div className="p-4 flex flex-col sm:flex-row gap-4 items-start">
               <label className="cursor-pointer shrink-0 group relative">
                 <img
-                  src={logoPreview || '/uploads/branding/zk-logo.svg'}
+                  src={logoPreview || '/zk-logo.svg'}
                   alt="Logo preview"
                   className="w-24 h-24 rounded-2xl object-cover border border-slate-200 dark:border-white/15 bg-white"
                 />
@@ -320,7 +321,7 @@ export default function PlatformSettings() {
           <SectionCard title="Live Branding Preview">
             <div className="p-4">
               <div className="rounded-xl border border-slate-200 dark:border-white/10 p-3 flex items-center gap-2.5">
-                <img src={logoPreview || '/uploads/branding/zk-logo.svg'} alt="logo" className="w-9 h-9 rounded-lg object-cover" />
+                <img src={logoPreview || '/zk-logo.svg'} alt="logo" className="w-9 h-9 rounded-lg object-cover" />
                 <div className="min-w-0">
                   <p className="font-black text-sm truncate">{form.site_name || 'ZK-SONG'}</p>
                   <p className="text-[10px] text-slate-500 truncate">{form.accent_badge_text}</p>
@@ -342,7 +343,7 @@ export default function PlatformSettings() {
 
           <SectionCard title="Current Administrator">
             <div className="p-4 flex items-center gap-3">
-              <img src={user?.avatar_url || '/uploads/avatars/avatar-admin.svg'} alt={user?.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-white/15" />
+              <img src={user?.avatar_url || monogramAvatar(user?.name, user?.id)} alt={user?.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-white/15" />
               <div className="min-w-0">
                 <p className="font-extrabold text-sm truncate">{user?.name}</p>
                 <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>

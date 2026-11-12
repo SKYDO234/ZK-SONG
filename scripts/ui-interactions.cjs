@@ -52,13 +52,56 @@ function check(name, cond, detail = '') {
   const adminToken = (await fetch(`${BASE}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'admin@zksong.io', password: 'Admin@123' }),
+    body: JSON.stringify({ email: 'admin@gmail.com', password: 'admin123' }),
   }).then((r) => r.json())).token;
-  const artistToken = (await fetch(`${BASE}/api/auth/login`, {
+  const adminHeaders = { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' };
+
+  // ---- provision throwaway fixtures so the suite works on an empty platform ----
+  const stamp = Date.now();
+  const fixtureEmail = `smoke-${stamp}@example.com`;
+  const artist = await fetch(`${BASE}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'aria@zksong.io', password: 'Artist@123' }),
-  }).then((r) => r.json())).token;
+    body: JSON.stringify({ name: 'Smoke Artist', email: fixtureEmail, password: 'smoke1234', primary_genre: 'Synthwave' }),
+  }).then((r) => r.json());
+  const artistToken = artist.token;
+
+  const wavRes = await fetch(`${BASE}/api/public/bootstrap`);
+  const keyRes = await fetch(`${BASE}/api/admin/api-keys`, {
+    method: 'POST',
+    headers: adminHeaders,
+    body: JSON.stringify({ name: `Smoke Client ${stamp}` }),
+  });
+  const fixtureKey = (await keyRes.json()).api_key;
+
+  const audio = new File([Buffer.alloc(2048)], 'smoke.wav', { type: 'audio/wav' });
+  const cover = new File(['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#8b5cf6"/></svg>'], 'smoke.svg', { type: 'image/svg+xml' });
+  const form = new FormData();
+  form.append('title', 'Smoke Quantum Track');
+  form.append('artist', 'Smoke Artist');
+  form.append('musician', 'Smoke Artist');
+  form.append('composer', 'Smoke Artist');
+  form.append('genre', 'Synthwave');
+  form.append('duration', '8');
+  form.append('duration_formatted', '0:08');
+  form.append('audio', audio);
+  form.append('thumbnail', cover);
+  const uploaded = await fetch(`${BASE}/api/user/songs`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${artistToken}` },
+    body: form,
+  }).then((r) => r.json());
+  const fixtureSongId = uploaded.song?.id;
+  await fetch(`${BASE}/api/admin/songs/${fixtureSongId}/approve`, {
+    method: 'POST', headers: adminHeaders,
+  });
+  console.log(`fixtures: artist #${artist.user?.id}, song #${fixtureSongId}, key ${fixtureKey?.api_key?.slice(0, 14)}…\n`);
+
+  const cleanup = async () => {
+    await fetch(`${BASE}/api/admin/songs/${fixtureSongId}`, { method: 'DELETE', headers: adminHeaders }).catch(() => {});
+    await fetch(`${BASE}/api/admin/users/${artist.user?.id}`, { method: 'DELETE', headers: adminHeaders }).catch(() => {});
+    await fetch(`${BASE}/api/admin/api-keys/${fixtureKey?.id}`, { method: 'DELETE', headers: adminHeaders }).catch(() => {});
+  };
 
   // ---------- My Songs: status filter + edit modal ----------
   let dom = await boot('/user/songs', artistToken);
@@ -87,6 +130,14 @@ function check(name, cond, detail = '') {
   // ---------- Admin API sandbox ----------
   dom = await boot('/admin/api-keys', adminToken);
   doc = dom.window.document;
+  await sleep(600);
+  const keySelect = doc.querySelector('select');
+  if (keySelect && keySelect.options.length > 1) {
+    const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLSelectElement.prototype, 'value').set;
+    setter.call(keySelect, keySelect.options[1].value);
+    keySelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    await sleep(300);
+  }
   const sandboxBtn = byText(doc, 'button', 'Send Request');
   sandboxBtn?.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
   await sleep(1800);
@@ -100,12 +151,12 @@ function check(name, cond, detail = '') {
   const input = doc.querySelector('input[placeholder*="Search title"]');
   if (input) {
     const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, 'value').set;
-    setter.call(input, 'Quantum');
+    setter.call(input, 'Smoke Quantum');
     input.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
   }
   await sleep(1200);
   text = doc.getElementById('root').textContent.replace(/\s+/g, ' ');
-  check('Songs Management: search narrows result set', /Quantum Bloom/.test(text) && !/Neon Odyssey/.test(text), text.match(/Song Catalogue[^]*?plays/)?.[0]?.slice(0, 90));
+  check('Songs Management: search narrows result set', /Smoke Quantum Track/.test(text) && /1 song\(s\) matching your filters/.test(text), text.match(/Song Catalogue[^]*?plays/)?.[0]?.slice(0, 90));
   dom.window.close();
 
   // ---------- Admin users: expand details ----------
@@ -123,16 +174,17 @@ function check(name, cond, detail = '') {
   const catalogSearch = doc.querySelector('input[placeholder*="Search"]');
   if (catalogSearch) {
     const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, 'value').set;
-    setter.call(catalogSearch, 'Quantum');
+    setter.call(catalogSearch, 'Smoke Quantum');
     catalogSearch.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     await sleep(700);
     text = doc.getElementById('root').textContent.replace(/\s+/g, ' ');
-    check('Landing: catalogue search filters songs', /Quantum Bloom/.test(text));
+    check('Landing: catalogue search filters songs', /Smoke Quantum Track/.test(text));
   } else {
     check('Landing: catalogue search input present', false);
   }
   dom.window.close();
 
+  await cleanup();
   const failed = results.filter((r) => !r.ok).length;
   console.log(`\n${results.length - failed}/${results.length} interaction checks passed`);
   process.exit(failed ? 1 : 0);

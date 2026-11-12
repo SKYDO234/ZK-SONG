@@ -26,6 +26,8 @@ import {
   ExternalLink,
   Layers,
 } from 'lucide-react';
+import { mediaUrl } from '../lib/apiBase';
+import { monogramAvatar } from '../components/avatar';
 import { useApp } from '../context/AppContext';
 import ArtistOfMonthBadge from '../components/ArtistOfMonthBadge';
 
@@ -37,7 +39,6 @@ export default function LandingPage() {
     artistOfTheMonth,
     publicSongs,
     publicStats,
-    demoApiKey,
     user,
     loginWithCredentials,
     currentSong,
@@ -54,21 +55,14 @@ export default function LandingPage() {
   const [search, setSearch] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [coverFilter, setCoverFilter] = useState('all'); // 'all' | 'original' | 'cover'
-  const [quickLoginLoading, setQuickLoginLoading] = useState('');
 
   // External REST API Simulator state
   const [simApiKey, setSimApiKey] = useState('');
   const [simSearch, setSimSearch] = useState('');
-  const [simTab, setSimTab] = useState('spotify_ui'); // 'spotify_ui' | 'raw_json' | 'code_docs'
+  const [simTab, setSimTab] = useState('client_ui'); // 'client_ui' | 'raw_json' | 'code_docs'
   const [simLoading, setSimLoading] = useState(false);
   const [simResponse, setSimResponse] = useState(null);
   const [simError, setSimError] = useState(null);
-
-  useEffect(() => {
-    if (demoApiKey && !simApiKey) {
-      setSimApiKey(demoApiKey);
-    }
-  }, [demoApiKey, simApiKey]);
 
   const genres = useMemo(() => {
     const set = new Set(['All']);
@@ -97,20 +91,8 @@ export default function LandingPage() {
     });
   }, [publicSongs, selectedGenre, coverFilter, search]);
 
-  const handleQuickDemoLogin = async (email, password, targetPath, label) => {
-    try {
-      setQuickLoginLoading(label);
-      await loginWithCredentials(email, password);
-      navigate(targetPath);
-    } catch (err) {
-      notify(err.message, 'error');
-    } finally {
-      setQuickLoginLoading('');
-    }
-  };
-
-  const fetchExternalApiDemo = async (overrideKey = null, querySearch = simSearch) => {
-    const keyToUse = overrideKey !== null ? overrideKey : simApiKey || demoApiKey;
+  const fetchExternalApi = async (overrideKey = null, querySearch = simSearch) => {
+    const keyToUse = overrideKey !== null ? overrideKey : simApiKey;
     if (!keyToUse) return;
     setSimLoading(true);
     setSimError(null);
@@ -135,12 +117,6 @@ export default function LandingPage() {
     }
   };
 
-  useEffect(() => {
-    if (demoApiKey) {
-      fetchExternalApiDemo(demoApiKey, '');
-    }
-  }, [demoApiKey]);
-
   const winner = artistOfTheMonth?.winner;
   const leaderboard = artistOfTheMonth?.leaderboard || [];
 
@@ -151,7 +127,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3 group">
             <img
-              src={settings.logo_url || '/uploads/branding/zk-logo.svg'}
+              src={mediaUrl(settings.logo_url) || '/zk-logo.svg'}
               alt={settings.site_name}
               className="w-11 h-11 rounded-2xl object-cover shadow-lg shadow-violet-500/20 border border-violet-500/30 group-hover:scale-105 transition-transform"
             />
@@ -180,7 +156,7 @@ export default function LandingPage() {
             </a>
             <a href="#external-api" className="hover:text-violet-500 transition-colors flex items-center gap-1.5">
               <KeyRound className="w-4 h-4 text-cyan-400" />
-              Spotify REST API
+              REST API
             </a>
           </nav>
 
@@ -278,54 +254,10 @@ export default function LandingPage() {
                   className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 font-bold text-sm transition-all"
                 >
                   <Terminal className="w-4 h-4" />
-                  <span>REST API & Spotify Demo</span>
+                  <span>Live REST API</span>
                 </a>
               </div>
 
-              {/* Instant One-Click Panel Switcher for Evaluation */}
-              <div className="p-4 rounded-2xl bg-white/90 dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 shadow-lg space-y-2.5">
-                <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  <span>⚡ Instant Workspace Access (1-Click Demo Login)</span>
-                  <span className="text-emerald-500 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                    Live Database
-                  </span>
-                </div>
-                <div className="grid sm:grid-cols-3 gap-2.5">
-                  <button
-                    onClick={() =>
-                      handleQuickDemoLogin('admin@zksong.io', 'Admin@123', '/admin/dashboard', 'admin')
-                    }
-                    disabled={Boolean(quickLoginLoading)}
-                    className="flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-700 dark:text-amber-300 text-xs font-extrabold transition-all"
-                  >
-                    <ShieldCheck className="w-4 h-4 shrink-0" />
-                    <span>{quickLoginLoading === 'admin' ? 'Entering...' : 'Enter Admin Panel'}</span>
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      handleQuickDemoLogin('aria@zksong.io', 'Artist@123', '/user/dashboard', 'aria')
-                    }
-                    disabled={Boolean(quickLoginLoading)}
-                    className="flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/40 text-violet-700 dark:text-violet-300 text-xs font-extrabold transition-all"
-                  >
-                    <Crown className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>{quickLoginLoading === 'aria' ? 'Entering...' : 'User Panel (Aria 👑)'}</span>
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      handleQuickDemoLogin('kaelen@zksong.io', 'Artist@123', '/user/dashboard', 'kaelen')
-                    }
-                    disabled={Boolean(quickLoginLoading)}
-                    className="flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-700 dark:text-cyan-300 text-xs font-extrabold transition-all"
-                  >
-                    <UserCheck className="w-4 h-4 shrink-0" />
-                    <span>{quickLoginLoading === 'kaelen' ? 'Entering...' : 'User Panel (Kaelen)'}</span>
-                  </button>
-                </div>
-              </div>
             </div>
 
             {/* Hero Right Featured Player Card */}
@@ -348,7 +280,7 @@ export default function LandingPage() {
                   <div className="space-y-4">
                     <div className="relative rounded-2xl overflow-hidden aspect-square max-h-64 mx-auto border border-white/15 group">
                       <img
-                        src={publicSongs[0].thumbnail_url}
+                        src={mediaUrl(publicSongs[0].thumbnail_url)}
                         alt={publicSongs[0].title}
                         className="w-full h-full object-cover"
                       />
@@ -452,7 +384,7 @@ export default function LandingPage() {
               {
                 label: 'External API Clients',
                 value: publicStats.active_api_integrations,
-                sub: 'Spotify-like Apps Connected',
+                sub: 'External Apps Connected',
               },
             ].map((item, i) => (
               <div
@@ -523,7 +455,7 @@ export default function LandingPage() {
                 <div className="lg:col-span-8 space-y-5">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
                     <img
-                      src={winner.avatar_url || '/uploads/avatars/avatar-aria.svg'}
+                      src={winner.avatar_url || monogramAvatar(winner.name, winner.user_id)}
                       alt={winner.name}
                       className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-400 shadow-lg"
                     />
@@ -554,7 +486,7 @@ export default function LandingPage() {
                             className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
                           >
                             <img
-                              src={song.thumbnail_url}
+                              src={mediaUrl(song.thumbnail_url)}
                               alt={song.title}
                               className="w-12 h-12 rounded-xl object-cover shrink-0"
                             />
@@ -612,7 +544,7 @@ export default function LandingPage() {
                             #{entry.rank}
                           </span>
                           <img
-                            src={entry.avatar_url || '/uploads/avatars/avatar-aria.svg'}
+                            src={entry.avatar_url || monogramAvatar(entry.name, entry.user_id)}
                             alt={entry.name}
                             className="w-8 h-8 rounded-full object-cover shrink-0"
                           />
@@ -720,7 +652,7 @@ export default function LandingPage() {
                   >
                     <div className="relative aspect-[16/10] overflow-hidden bg-slate-950">
                       <img
-                        src={song.thumbnail_url}
+                        src={mediaUrl(song.thumbnail_url)}
                         alt={song.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
@@ -836,7 +768,7 @@ export default function LandingPage() {
       </section>
 
       {/* ====================================================================
-          EXTERNAL REST API & SPOTIFY-LIKE APP SIMULATOR SECTION
+          EXTERNAL REST API SECTION
          ==================================================================== */}
       <section id="external-api" className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
@@ -847,7 +779,7 @@ export default function LandingPage() {
                 <span>External Music Application REST API (v1)</span>
               </div>
               <h2 className="text-3xl font-black mt-2">
-                Connect Spotify-Like Music Apps via API Key
+                Connect External Music Apps via API Key
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
                 External streaming clients authenticate with <code className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/10 font-mono text-xs">X-API-Key</code> or{' '}
@@ -857,7 +789,7 @@ export default function LandingPage() {
 
             <div className="flex items-center gap-2">
               {[
-                { id: 'spotify_ui', label: '🎵 Live Spotify-Like App Preview' },
+                { id: 'client_ui', label: '🎵 Live Client Preview' },
                 { id: 'raw_json', label: '{ } Live JSON Response' },
                 { id: 'code_docs', label: '⚡ Integration Code' },
               ].map((t) => (
@@ -915,7 +847,7 @@ export default function LandingPage() {
               />
 
               <button
-                onClick={() => fetchExternalApiDemo(simApiKey, simSearch)}
+                onClick={() => fetchExternalApi(simApiKey, simSearch)}
                 disabled={simLoading}
                 className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-extrabold text-xs flex items-center justify-center gap-2 shrink-0 shadow-md"
               >
@@ -931,18 +863,12 @@ export default function LandingPage() {
                   HTTP 401/403 API Authentication Rejected:
                 </div>
                 <pre className="overflow-x-auto">{JSON.stringify(simError, null, 2)}</pre>
-                <button
-                  onClick={() => {
-                    setSimApiKey(demoApiKey);
-                    fetchExternalApiDemo(demoApiKey, simSearch);
-                  }}
-                  className="mt-2 px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-sans font-bold text-xs"
-                >
-                  Restore Valid Production API Key
-                </button>
+                <p className="font-sans text-[11px] text-rose-300/80">
+                  Create a key from Admin Panel → API Key Management, then paste it above.
+                </p>
               </div>
-            ) : simTab === 'spotify_ui' && simResponse ? (
-              /* Simulated External Spotify-like Music App consuming /api/v1/songs */
+            ) : simTab === 'client_ui' && simResponse ? (
+              /* Example external music client consuming /api/v1/songs */
               <div className="rounded-2xl bg-[#090d16] text-white border border-emerald-500/30 overflow-hidden shadow-2xl">
                 <div className="px-6 py-4 bg-gradient-to-r from-emerald-950/90 via-slate-900 to-slate-950 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
@@ -998,7 +924,7 @@ export default function LandingPage() {
                             <td className="py-3 px-3">
                               <div className="flex items-center gap-3">
                                 <img
-                                  src={s.thumbnail_path || s.thumbnail_url}
+                                  src={mediaUrl(s.thumbnail_path || s.thumbnail_url)}
                                   alt={s.title}
                                   className="w-10 h-10 rounded-lg object-cover shrink-0"
                                 />
@@ -1071,7 +997,7 @@ export default function LandingPage() {
             ) : (
               <div className="rounded-2xl bg-slate-950 p-5 border border-white/10 font-mono text-xs text-cyan-300 space-y-3 overflow-x-auto">
                 <div className="text-slate-400 font-sans font-bold">
-                  Example JavaScript Fetch for External Music Apps (Spotify / Mobile / Web):
+                  Example JavaScript Fetch for External Music Clients (Mobile / Web):
                 </div>
                 <pre className="text-emerald-300">{`const response = await fetch('${window.location.origin}/api/v1/songs', {
   method: 'GET',
@@ -1094,7 +1020,7 @@ const { songs, artist_of_the_month } = await response.json();
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-3">
             <img
-              src={settings.logo_url || '/uploads/branding/zk-logo.svg'}
+              src={mediaUrl(settings.logo_url) || '/zk-logo.svg'}
               alt={settings.site_name}
               className="w-7 h-7 rounded-lg"
             />

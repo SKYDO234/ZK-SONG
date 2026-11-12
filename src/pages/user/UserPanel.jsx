@@ -31,6 +31,8 @@ import {
   FileAudio,
   AlertTriangle,
 } from 'lucide-react';
+import { mediaUrl } from '../../lib/apiBase';
+import { monogramAvatar } from '../../components/avatar';
 import { useApp } from '../../context/AppContext';
 import DashboardLayout from '../../components/DashboardLayout';
 import ArtistOfMonthBadge from '../../components/ArtistOfMonthBadge';
@@ -100,9 +102,9 @@ export function UserDashboard() {
 
   const stats = data?.stats || user?.stats || {};
   const aotm = data?.artist_of_the_month || artistOfTheMonth;
-  const isWinner = Boolean(aotm?.winner && Number(aotm.winner.user_id) === Number(user?.id));
+  const isWinner = Boolean(aotm?.winner && String(aotm.winner.user_id) === String(user?.id));
   const leaderboard = aotm?.leaderboard || [];
-  const myRank = leaderboard.findIndex((a) => Number(a.user_id) === Number(user?.id)) + 1;
+  const myRank = leaderboard.findIndex((a) => String(a.user_id) === String(user?.id)) + 1;
 
   return (
     <DashboardLayout
@@ -205,7 +207,7 @@ export function UserDashboard() {
 
             <div className="relative mt-5 space-y-2">
               {leaderboard.slice(0, 4).map((artist, idx) => {
-                const isMe = Number(artist.user_id) === Number(user?.id);
+                const isMe = String(artist.user_id) === String(user?.id);
                 return (
                   <div
                     key={artist.user_id}
@@ -229,7 +231,7 @@ export function UserDashboard() {
                       {idx + 1}
                     </span>
                     <img
-                      src={artist.avatar_url || '/uploads/avatars/avatar-aria.svg'}
+                      src={artist.avatar_url || monogramAvatar(artist.name, artist.user_id)}
                       alt={artist.name}
                       className="w-7 h-7 rounded-lg object-cover border border-white/20 shrink-0"
                     />
@@ -294,7 +296,7 @@ export function UserDashboard() {
                         aria-label={`Play ${song.title}`}
                       >
                         <img
-                          src={song.thumbnail_url}
+                          src={mediaUrl(song.thumbnail_url)}
                           alt={song.title}
                           className="w-full h-full object-cover"
                         />
@@ -594,7 +596,7 @@ export function MySongs() {
                       className="relative w-full sm:w-16 h-40 sm:h-16 rounded-xl overflow-hidden shrink-0 group"
                       aria-label={`Play ${song.title}`}
                     >
-                      <img src={song.thumbnail_url} alt={song.title} className="w-full h-full object-cover" />
+                      <img src={mediaUrl(song.thumbnail_url)} alt={song.title} className="w-full h-full object-cover" />
                       <span className="absolute inset-0 bg-black/45 grid place-items-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         {active ? (
                           <Pause className="w-5 h-5 text-white" />
@@ -1492,7 +1494,7 @@ export function AccountManagement() {
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
                 <label className="cursor-pointer group relative shrink-0">
                   <img
-                    src={avatarPreview || '/uploads/avatars/avatar-aria.svg'}
+                    src={avatarPreview || monogramAvatar(user?.name, user?.id)}
                     alt="Avatar"
                     className="w-20 h-20 rounded-2xl object-cover border border-slate-200 dark:border-white/15"
                   />

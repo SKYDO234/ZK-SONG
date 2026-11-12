@@ -28,6 +28,8 @@ import {
   Database,
   Sparkles,
 } from 'lucide-react';
+import { mediaUrl } from '../../lib/apiBase';
+import { monogramAvatar } from '../../components/avatar';
 import { useApp } from '../../context/AppContext';
 import DashboardLayout from '../../components/DashboardLayout';
 import ArtistOfMonthBadge from '../../components/ArtistOfMonthBadge';
@@ -152,7 +154,7 @@ export function AdminDashboard() {
                         className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0 group"
                         aria-label={`Preview ${song.title}`}
                       >
-                        <img src={song.thumbnail_url} alt={song.title} className="w-full h-full object-cover" />
+                        <img src={mediaUrl(song.thumbnail_url)} alt={song.title} className="w-full h-full object-cover" />
                         <span className="absolute inset-0 bg-black/50 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
                           {active ? <Pause className="w-4 h-4 text-white" /> : <Play className="w-4 h-4 text-white fill-white" />}
                         </span>
@@ -219,7 +221,7 @@ export function AdminDashboard() {
                 <>
                   <div className="flex items-center gap-3 mt-3">
                     <img
-                      src={aotm.winner.avatar_url || '/uploads/avatars/avatar-aria.svg'}
+                      src={aotm.winner.avatar_url || monogramAvatar(aotm.winner.name, aotm.winner.user_id)}
                       alt={aotm.winner.name}
                       className="w-12 h-12 rounded-xl object-cover border-2 border-amber-400/60"
                     />
@@ -304,7 +306,7 @@ function AdminSongCard({ song, onApprove, onReject, onDelete, busy, playSong, cu
           className="relative w-full sm:w-20 h-40 sm:h-20 rounded-xl overflow-hidden shrink-0 group"
           aria-label={`Play ${song.title}`}
         >
-          <img src={song.thumbnail_url} alt={song.title} className="w-full h-full object-cover" />
+          <img src={mediaUrl(song.thumbnail_url)} alt={song.title} className="w-full h-full object-cover" />
           <span className="absolute inset-0 bg-black/45 grid place-items-center sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             {active ? <Pause className="w-5 h-5 text-white" /> : <Play className="w-5 h-5 text-white fill-white" />}
           </span>
@@ -741,7 +743,7 @@ export function ApprovedSongs() {
         subtitle="Live in public catalogue, streaming player, and /api/v1/songs"
         action={
           <Link to="/admin/api-keys" className="text-xs font-extrabold text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1">
-            <ExternalLink className="w-3 h-3" /> API Sandbox
+            <ExternalLink className="w-3 h-3" /> API Keys
           </Link>
         }
       >
@@ -780,7 +782,7 @@ export function ApprovedSongs() {
                 return (
                   <div key={song.id} className="group rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden bg-white dark:bg-slate-900/60 hover:shadow-xl transition-all">
                     <div className="relative aspect-square overflow-hidden">
-                      <img src={song.thumbnail_url} alt={song.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img src={mediaUrl(song.thumbnail_url)} alt={song.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                       <div className="absolute top-2 left-2 flex flex-wrap gap-1">
                         {song.is_artist_of_the_month && (

@@ -18,6 +18,7 @@ import {
   Moon,
   AlertCircle,
 } from 'lucide-react';
+import { mediaUrl } from '../lib/apiBase';
 import { useApp } from '../context/AppContext';
 
 function AuthShell({ title, subtitle, children }) {
@@ -50,7 +51,7 @@ function AuthShell({ title, subtitle, children }) {
           <div className="text-center space-y-2">
             <Link to="/" className="inline-block">
               <img
-                src={settings.logo_url || '/uploads/branding/zk-logo.svg'}
+                src={mediaUrl(settings.logo_url) || '/zk-logo.svg'}
                 alt={settings.site_name}
                 className="w-14 h-14 rounded-2xl mx-auto shadow-lg shadow-violet-500/25 border border-violet-500/30 object-cover"
               />
@@ -97,25 +98,6 @@ export function LoginPage() {
     }
   };
 
-  const quickFillAndLogin = async (demoEmail, demoPass) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setError('');
-    setLoading(true);
-    try {
-      const loggedInUser = await loginWithCredentials(demoEmail, demoPass);
-      if (loggedInUser.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/user/dashboard');
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <AuthShell
       title={`Sign in to ${settings.site_name}`}
@@ -140,7 +122,7 @@ export function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="artist@zksong.io"
+              placeholder="you@example.com"
               className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm focus:outline-none focus:border-violet-500"
             />
           </div>
@@ -186,46 +168,6 @@ export function LoginPage() {
           {loading ? 'Authenticating...' : 'Sign In'}
         </button>
       </form>
-
-      {/* Instant Demo Credentials */}
-      <div className="pt-4 border-t border-slate-200 dark:border-white/10 space-y-2.5">
-        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 text-center">
-          Quick 1-Click Demo Logins
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => quickFillAndLogin('admin@zksong.io', 'Admin@123')}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-extrabold transition-colors"
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Admin Panel</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => quickFillAndLogin('aria@zksong.io', 'Artist@123')}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/30 text-violet-700 dark:text-violet-300 text-xs font-extrabold transition-colors"
-          >
-            <Crown className="w-3.5 h-3.5 text-amber-400" />
-            <span>Aria (Artist 👑)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => quickFillAndLogin('kaelen@zksong.io', 'Artist@123')}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-xs font-extrabold transition-colors"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Kaelen (Artist)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => quickFillAndLogin('zayn.suspended@zksong.io', 'Artist@123')}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs font-bold transition-colors"
-          >
-            <span>Banned Account</span>
-          </button>
-        </div>
-      </div>
 
       <p className="text-center text-xs text-slate-500">
         Don&apos;t have an artist account?{' '}
@@ -316,7 +258,7 @@ export function RegisterPage() {
               required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="nova@zksong.io"
+              placeholder="you@example.com"
               className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm focus:outline-none focus:border-violet-500"
             />
           </div>
@@ -430,9 +372,8 @@ export function ForgotPasswordPage() {
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1); // 1: Request Code, 2: Verify & Reset
-  const [email, setEmail] = useState('aria@zksong.io');
+  const [email, setEmail] = useState('');
   const [resetCode, setResetCode] = useState('');
-  const [demoCode, setDemoCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -450,8 +391,6 @@ export function ForgotPasswordPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate reset code');
-      setDemoCode(data.demo_reset_code || '');
-      setResetCode(data.demo_reset_code || '');
       setStep(2);
       notify(data.message, 'info');
     } catch (err) {
@@ -519,7 +458,7 @@ export function ForgotPasswordPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="aria@zksong.io"
+                placeholder="you@example.com"
                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm focus:outline-none focus:border-violet-500"
               />
             </div>
@@ -535,18 +474,6 @@ export function ForgotPasswordPage() {
         </form>
       ) : (
         <form onSubmit={handleResetPassword} className="space-y-4">
-          {demoCode && (
-            <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-center justify-between">
-              <div>
-                <span className="font-bold block">Sandbox Verification Code Generated:</span>
-                <span>Code auto-filled below for instant testing</span>
-              </div>
-              <span className="font-mono font-black text-base px-3 py-1 rounded-xl bg-black/30">
-                {demoCode}
-              </span>
-            </div>
-          )}
-
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
               6-Digit Security Code

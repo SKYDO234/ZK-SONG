@@ -29,6 +29,8 @@ import {
   AlertTriangle,
   Disc3,
 } from 'lucide-react';
+import { mediaUrl } from '../../lib/apiBase';
+import { monogramAvatar } from '../../components/avatar';
 import { useApp } from '../../context/AppContext';
 import DashboardLayout from '../../components/DashboardLayout';
 import ArtistOfMonthBadge from '../../components/ArtistOfMonthBadge';
@@ -197,12 +199,12 @@ export default function AdminSongDetails() {
       {/* Hero */}
       <div className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/70">
         <div className="absolute inset-0 opacity-25">
-          <img src={song.thumbnail_url} alt="" className="w-full h-full object-cover blur-2xl scale-110" />
+          <img src={mediaUrl(song.thumbnail_url)} alt="" className="w-full h-full object-cover blur-2xl scale-110" />
         </div>
         <div className="relative p-4 sm:p-6 flex flex-col sm:flex-row gap-5">
           <div className="relative w-full sm:w-48 shrink-0">
             <img
-              src={song.thumbnail_url}
+              src={mediaUrl(song.thumbnail_url)}
               alt={song.title}
               className="w-full aspect-square object-cover rounded-2xl border border-white/20 shadow-2xl"
             />
@@ -248,7 +250,7 @@ export default function AdminSongDetails() {
                 {active ? <><Pause className="w-4 h-4" /> Pause Preview</> : <><Play className="w-4 h-4" /> Play Audio</>}
               </button>
               {song.has_video && (
-                <a href={song.video_url} target="_blank" rel="noreferrer" className={ghostBtn}>
+                <a href={mediaUrl(song.video_url)} target="_blank" rel="noreferrer" className={ghostBtn}>
                   <Video className="w-4 h-4" /> Open Video
                 </a>
               )}
@@ -305,7 +307,7 @@ export default function AdminSongDetails() {
                 <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
                   <FileAudio className="w-3.5 h-3.5" /> Audio Track
                 </p>
-                <audio controls preload="metadata" src={song.audio_url} className="w-full h-11">
+                <audio controls preload="metadata" src={mediaUrl(song.audio_url)} className="w-full h-11">
                   Your browser does not support audio playback.
                 </audio>
                 <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-slate-500">
@@ -324,7 +326,7 @@ export default function AdminSongDetails() {
                 </p>
                 {song.has_video ? (
                   <>
-                    <video controls preload="metadata" poster={song.thumbnail_url} src={song.video_url} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-black max-h-[300px]">
+                    <video controls preload="metadata" poster={mediaUrl(song.thumbnail_url)} src={mediaUrl(song.video_url)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-black max-h-[300px]">
                       Your browser does not support video playback.
                     </video>
                     <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-slate-500">
@@ -400,7 +402,7 @@ export default function AdminSongDetails() {
             <div className="p-4">
               <div className="flex items-center gap-3">
                 <img
-                  src={data.uploader?.avatar_url || '/uploads/avatars/avatar-aria.svg'}
+                  src={data.uploader?.avatar_url || monogramAvatar(data.uploader?.name, data.uploader?.id)}
                   alt={data.uploader?.name}
                   className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-white/15"
                 />
@@ -446,7 +448,7 @@ export default function AdminSongDetails() {
                 <>
                   <div className="flex items-center gap-3">
                     <img
-                      src={data.artist_of_the_month.winner.avatar_url || '/uploads/avatars/avatar-aria.svg'}
+                      src={data.artist_of_the_month.winner.avatar_url || monogramAvatar(data.artist_of_the_month.winner.name, data.artist_of_the_month.winner.user_id)}
                       alt={data.artist_of_the_month.winner.name}
                       className="w-10 h-10 rounded-xl object-cover border-2 border-amber-400/60"
                     />

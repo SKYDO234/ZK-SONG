@@ -20,9 +20,11 @@ import {
   ChevronRight,
   CheckCheck,
 } from 'lucide-react';
+import { mediaUrl } from '../lib/apiBase';
 import { useApp } from '../context/AppContext';
 import ArtistOfMonthBadge from './ArtistOfMonthBadge';
 import { formatDate } from './Common';
+import { monogramAvatar } from './avatar';
 
 const USER_NAV = [
   { to: '/user/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -41,8 +43,17 @@ const ADMIN_NAV = [
 ];
 
 export function DashboardLayout({ variant = 'user', title, subtitle, actions, children }) {
-  const { user, logout, theme, toggleTheme, settings, authFetch, unreadNotifications, setUnreadNotifications } =
-    useApp();
+  const {
+    user,
+    logout,
+    theme,
+    toggleTheme,
+    settings,
+    authFetch,
+    unreadNotifications,
+    setUnreadNotifications,
+    isPlatformOwner,
+  } = useApp();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -107,7 +118,7 @@ export function DashboardLayout({ variant = 'user', title, subtitle, actions, ch
         <div className="h-16 px-4 flex items-center justify-between border-b border-slate-200 dark:border-white/10 shrink-0">
           <Link to="/" className="flex items-center gap-2.5 min-w-0">
             <img
-              src={settings.logo_url || '/uploads/branding/zk-logo.svg'}
+              src={mediaUrl(settings.logo_url) || '/zk-logo.svg'}
               alt={settings.site_name}
               className="w-9 h-9 rounded-xl object-cover border border-violet-500/30 shrink-0"
             />
@@ -130,7 +141,7 @@ export function DashboardLayout({ variant = 'user', title, subtitle, actions, ch
         <div className="px-4 py-4 border-b border-slate-200 dark:border-white/10">
           <div className="flex items-center gap-3">
             <img
-              src={user?.avatar_url || '/uploads/avatars/avatar-aria.svg'}
+              src={user?.avatar_url || monogramAvatar(user?.name, user?.id)}
               alt={user?.name}
               className="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-white/15 shrink-0"
             />
@@ -186,7 +197,7 @@ export function DashboardLayout({ variant = 'user', title, subtitle, actions, ch
               <ExternalLink className="w-4 h-4" />
               <span>Public Catalogue</span>
             </Link>
-            {!isAdmin && user?.role === 'admin' && (
+            {!isAdmin && user?.role === 'admin' && isPlatformOwner && (
               <Link
                 to="/admin/dashboard"
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors"

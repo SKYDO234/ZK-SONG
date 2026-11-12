@@ -11,10 +11,10 @@ import {
   Music4,
   Crown,
   RefreshCw,
-  UserCog,
   CheckCircle2,
   Clock3,
 } from 'lucide-react';
+import { monogramAvatar } from '../../components/avatar';
 import { useApp } from '../../context/AppContext';
 import DashboardLayout from '../../components/DashboardLayout';
 import ArtistOfMonthBadge from '../../components/ArtistOfMonthBadge';
@@ -84,21 +84,6 @@ export default function UserManagement() {
     }
   };
 
-  const toggleRole = async (u) => {
-    setBusyId(u.id);
-    try {
-      const res = await authFetch(`/api/admin/users/${u.id}/role`, { method: 'PUT' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Role change failed');
-      notify(json.message, 'success');
-      load();
-    } catch (err) {
-      notify(err.message, 'error');
-    } finally {
-      setBusyId(null);
-    }
-  };
-
   const confirmDelete = async () => {
     setDeleting(true);
     try {
@@ -118,7 +103,6 @@ export default function UserManagement() {
 
   const activeCount = users.filter((u) => u.status === 'active').length;
   const bannedCount = users.filter((u) => u.status === 'banned').length;
-  const adminCount = users.filter((u) => u.role === 'admin').length;
 
   return (
     <DashboardLayout
@@ -135,10 +119,30 @@ export default function UserManagement() {
         <StatCard label="Total Accounts" value={pagination?.total ?? 0} icon={Users} tone="violet" loading={loading} />
         <StatCard label="Active (page)" value={activeCount} icon={UserCheck} tone="emerald" />
         <StatCard label="Banned (page)" value={bannedCount} icon={Ban} tone="rose" />
-        <StatCard label="Admins (page)" value={adminCount} icon={ShieldCheck} tone="amber" />
+        <StatCard
+          label="Administrators"
+          value={1}
+          hint="Single owner account"
+          icon={ShieldCheck}
+          tone="amber"
+        />
       </div>
 
-      <SectionCard title="Platform Accounts" subtitle="Complete user directory with role-based controls">
+      <div className="mb-4 flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
+        <ShieldCheck className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-xs font-extrabold text-amber-700 dark:text-amber-300">
+            Single-administrator platform
+          </p>
+          <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+            Admin access belongs exclusively to the platform owner account and cannot be granted,
+            revoked, banned or deleted from this panel. Artists can still be banned, restored or
+            permanently removed.
+          </p>
+        </div>
+      </div>
+
+      <SectionCard title="Platform Accounts" subtitle="Complete user directory with moderation controls">
         <div className="p-4 border-b border-slate-200 dark:border-white/10 space-y-3">
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -173,7 +177,7 @@ export default function UserManagement() {
           ) : (
             <div className="space-y-2.5 stagger">
               {users.map((u) => {
-                const isMe = Number(u.id) === Number(me?.id);
+                const isMe = String(u.id) === String(me?.id);
                 const isOpen = expanded === u.id;
                 return (
                   <div
@@ -186,7 +190,7 @@ export default function UserManagement() {
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                       <img
-                        src={u.avatar_url || '/uploads/avatars/avatar-aria.svg'}
+                        src={u.avatar_url || monogramAvatar(u.name, u.id)}
                         alt={u.name}
                         className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-white/15 shrink-0"
                       />
@@ -198,7 +202,7 @@ export default function UserManagement() {
                           )}
                           {u.role === 'admin' && (
                             <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 text-[9px] font-black inline-flex items-center gap-0.5">
-                              <ShieldCheck className="w-2.5 h-2.5" /> ADMIN
+                              <ShieldCheck className="w-2.5 h-2.5" /> ADMINISTRATOR
                             </span>
                           )}
                           <span
@@ -232,7 +236,7 @@ export default function UserManagement() {
                         </button>
                         <button
                           onClick={() => toggleBan(u)}
-                          disabled={isMe || busyId === u.id}
+                          disabled={isMe || u.role === 'admin' || busyId === u.id}
                           className={`px-2.5 py-1.5 rounded-lg border text-[10px] font-extrabold inline-flex items-center gap-1 disabled:opacity-40 ${
                             u.status === 'banned'
                               ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/10'
@@ -243,16 +247,8 @@ export default function UserManagement() {
                           {u.status === 'banned' ? <><UserCheck className="w-3 h-3" /> Unban</> : <><Ban className="w-3 h-3" /> Ban</>}
                         </button>
                         <button
-                          onClick={() => toggleRole(u)}
-                          disabled={isMe || busyId === u.id}
-                          className="px-2.5 py-1.5 rounded-lg border border-violet-500/40 text-violet-600 dark:text-violet-300 text-[10px] font-extrabold hover:bg-violet-500/10 inline-flex items-center gap-1 disabled:opacity-40"
-                          title="Toggle administrator role"
-                        >
-                          <UserCog className="w-3 h-3" /> {u.role === 'admin' ? 'Demote' : 'Promote'}
-                        </button>
-                        <button
                           onClick={() => setDeleteTarget(u)}
-                          disabled={isMe}
+                          disabled={isMe || u.role === 'admin'}
                           className="p-1.5 rounded-lg border border-rose-500/40 text-rose-500 hover:bg-rose-500/10 disabled:opacity-40"
                           title="Delete account"
                         >

@@ -6,14 +6,27 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
-const { db, getSettingsMap, getArtistOfTheMonth } = require('./db');
+const { db, getSettingsMap, getArtistOfTheMonth, ADMIN_EMAIL } = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-const JWT_SECRET = process.env.JWT_SECRET || 'zk-song-super-secret-jwt-key-2026-studio';
+const JWT_SECRET = process.env.JWT_SECRET || 'zk-song-dev-only-change-me';
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.warn('[ZK-SONG] WARNING: JWT_SECRET is not set. Set it in production.');
+}
 const UPLOADS_ROOT = path.join(__dirname, 'uploads');
 
-app.use(cors({ origin: true, credentials: true }));
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '';
+app.use(
+  cors(
+    ALLOWED_ORIGIN
+      ? {
+          origin: ALLOWED_ORIGIN.split(',').map((o) => o.trim()),
+          credentials: true,
+        }
+      : { origin: true, credentials: true }
+  )
+);
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
@@ -281,6 +294,14 @@ function enrichUser(user) {
   };
 }
 
+// The single, immutable platform owner: configured via ADMIN_EMAIL (default admin@gmail.com).
+// Only this account may hold the admin role, and it can never be banned, demoted or deleted.
+const PLATFORM_OWNER_EMAIL = String(ADMIN_EMAIL || '').trim().toLowerCase();
+
+function isPlatformOwner(user) {
+  return Boolean(user) && String(user.email || '').trim().toLowerCase() === PLATFORM_OWNER_EMAIL;
+}
+
 // Auth Middleware
 function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -308,7 +329,7 @@ function requireAuth(req, res, next) {
 
 function requireAdmin(req, res, next) {
   requireAuth(req, res, () => {
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== 'admin' || !isPlatformOwner(req.user)) {
       return res.status(403).json({ error: 'Administrator privileges required.' });
     }
     next();
@@ -464,6 +485,9 @@ app.post('/api/auth/register', (req, res) => {
   }
 
   const normalizedEmail = String(email).trim().toLowerCase();
+  if (normalizedEmail === PLATFORM_OWNER_EMAIL) {
+    return res.status(409).json({ error: 'An account with this email address already exists.' });
+  }
   const existing = db.prepare('SELECT id FROM users WHERE LOWER(email) = ?').get(normalizedEmail);
   if (existing) {
     return res.status(409).json({ error: 'An account with this email address already exists.' });
@@ -574,11 +598,13 @@ app.post('/api/auth/forgot-password', (req, res) => {
     user.id
   );
 
+  console.log(`[ZK-SONG] Password reset code for ${normalizedEmail}: ${resetCode} (expires in 30 minutes)`);
+
   res.json({
     success: true,
     email: normalizedEmail,
-    demo_reset_code: resetCode,
-    message: `Verification code generated for ${normalizedEmail}. Use code ${resetCode} to set your new password.`,
+    expires_in_minutes: 30,
+    message: `A 6-digit verification code has been generated for ${normalizedEmail}. It expires in 30 minutes.`,
   });
 });
 
@@ -620,6 +646,7 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
     user: enrichUser(req.user),
     unread_notifications: unreadNotifs,
     artist_of_the_month: getArtistOfTheMonth(),
+    is_platform_owner: isPlatformOwner(req.user),
   });
 });
 
@@ -1436,6 +1463,9 @@ app.post('/api/admin/users/:id/ban', requireAdmin, (req, res) => {
   if (!target) {
     return res.status(404).json({ error: 'User not found.' });
   }
+  if (target.role === 'admin' || isPlatformOwner(target)) {
+    return res.status(403).json({ error: 'The platform administrator account cannot be banned.' });
+  }
 
   const newStatus = target.status === 'banned' ? 'active' : 'banned';
   const now = new Date().toISOString();
@@ -1470,24 +1500,11 @@ app.post('/api/admin/users/:id/ban', requireAdmin, (req, res) => {
 });
 
 app.put('/api/admin/users/:id/role', requireAdmin, (req, res) => {
-  const targetId = Number(req.params.id);
-  if (targetId === req.user.id) {
-    return res.status(400).json({ error: 'You cannot change your own administrator role.' });
-  }
-
-  const target = db.prepare('SELECT * FROM users WHERE id = ?').get(targetId);
-  if (!target) {
-    return res.status(404).json({ error: 'User not found.' });
-  }
-
-  const newRole = target.role === 'admin' ? 'user' : 'admin';
-  const now = new Date().toISOString();
-  db.prepare('UPDATE users SET role = ?, updated_at = ? WHERE id = ?').run(newRole, now, targetId);
-
-  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(targetId);
-  res.json({
-    user: enrichUser(updated),
-    message: `Updated "${target.name}" role to ${newRole.toUpperCase()}.`,
+  // ZK-SONG runs a single-administrator model: only the platform owner may hold
+  // the admin role, so role escalation from the panel is not permitted.
+  return res.status(403).json({
+    error:
+      'Administrator access is reserved for the platform owner account and cannot be granted or revoked from the panel.',
   });
 });
 
@@ -1500,6 +1517,9 @@ app.delete('/api/admin/users/:id', requireAdmin, (req, res) => {
   const target = db.prepare('SELECT * FROM users WHERE id = ?').get(targetId);
   if (!target) {
     return res.status(404).json({ error: 'User not found.' });
+  }
+  if (target.role === 'admin' || isPlatformOwner(target)) {
+    return res.status(403).json({ error: 'The platform administrator account cannot be deleted.' });
   }
 
   // Clean up physical files for all songs belonging to this user

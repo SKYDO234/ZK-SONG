@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { withApiBase, mediaUrl } from '../lib/apiBase';
 
 const AppContext = createContext(null);
 
@@ -60,13 +61,13 @@ export function AppProvider({ children }) {
     total_plays: 0,
     active_api_integrations: 0,
   });
-  const [demoApiKey, setDemoApiKey] = useState('');
   const [loadingBootstrap, setLoadingBootstrap] = useState(true);
 
   // Auth State
   const [token, setToken] = useState(() => localStorage.getItem('zksong_token') || '');
   const [user, setUser] = useState(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [isPlatformOwner, setIsPlatformOwner] = useState(false);
   const [loadingAuth, setLoadingAuth] = useState(true);
 
   const refreshBootstrap = useCallback(async () => {
@@ -89,7 +90,6 @@ export function AppProvider({ children }) {
         if (data.artist_of_the_month) setArtistOfTheMonth(data.artist_of_the_month);
         if (data.approved_songs) setPublicSongs(data.approved_songs);
         if (data.stats) setPublicStats(data.stats);
-        if (data.demo_api_key) setDemoApiKey(data.demo_api_key);
       }
     } catch (err) {
       console.error('Bootstrap fetch error:', err);
@@ -114,6 +114,7 @@ export function AppProvider({ children }) {
           const data = await res.json();
           setUser(data.user);
           setUnreadNotifications(data.unread_notifications || 0);
+          setIsPlatformOwner(Boolean(data.is_platform_owner));
           if (data.artist_of_the_month) {
             setArtistOfTheMonth(data.artist_of_the_month);
           }
@@ -156,6 +157,7 @@ export function AppProvider({ children }) {
     setToken(data.token);
     setUser(data.user);
     notify(data.message || 'Signed in successfully!', 'success');
+    refreshUser(data.token);
     return data.user;
   };
 
@@ -288,7 +290,7 @@ export function AppProvider({ children }) {
       setCurrentSong(song);
       setCurrentTime(0);
       setDuration(song.duration || 18);
-      audio.src = song.audio_url;
+      audio.src = mediaUrl(song.audio_url);
       audio.volume = isMuted ? 0 : volume;
       audio.playbackRate = playbackRate;
 
@@ -399,7 +401,9 @@ export function AppProvider({ children }) {
   const downloadMedia = useCallback(
     (song, type = 'audio') => {
       if (!song) return;
-      const url = `/api/public/songs/${song.id}/download?type=${encodeURIComponent(type)}`;
+      const url = withApiBase(
+        `/api/public/songs/${song.id}/download?type=${encodeURIComponent(type)}`
+      );
       const a = document.createElement('a');
       a.href = url;
       a.download = '';
@@ -421,11 +425,12 @@ export function AppProvider({ children }) {
         dismissToast,
         settings,
         setSettings,
+        mediaUrl,
+        withApiBase,
         artistOfTheMonth,
         setArtistOfTheMonth,
         publicSongs,
         publicStats,
-        demoApiKey,
         loadingBootstrap,
         refreshBootstrap,
         token,
@@ -434,6 +439,7 @@ export function AppProvider({ children }) {
         unreadNotifications,
         setUnreadNotifications,
         loadingAuth,
+        isPlatformOwner,
         loginWithCredentials,
         registerAccount,
         logout,

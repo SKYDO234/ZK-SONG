@@ -1,0 +1,38 @@
+# ============================================================================
+# ZK-SONG — Netlify deployment
+#
+# The React app is a static SPA. Uploaded audio/video need persistent storage,
+# so the API runs on a long-lived host (Supabase Edge Functions, Render,
+# Railway, Fly.io…). Point the frontend at it with a build-time variable:
+#
+#   Netlify → Site configuration → Environment variables
+#   VITE_API_BASE_URL = https://<project-ref>.supabase.co/functions/v1/api
+#
+# Leave it unset only when you serve the built SPA from the bundled Express
+# server (`npm start`) instead of Netlify.
+# ============================================================================
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA fallback — client-side routes (/admin/songs/:id etc.) must resolve
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"

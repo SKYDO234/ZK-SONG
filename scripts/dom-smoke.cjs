@@ -53,13 +53,18 @@ async function boot(path, token) {
 }
 
 (async () => {
-  const login = await fetch(`${BASE}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: process.env.SMOKE_EMAIL || 'admin@zksong.io', password: process.env.SMOKE_PASS || 'Admin@123' }),
-  }).then((r) => r.json());
-  const token = login.token;
-  console.log(`logged in as ${login.user.name} (${login.user.role})\n`);
+  let token = null;
+  if (!process.env.ANON) {
+    const login = await fetch(`${BASE}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: process.env.SMOKE_EMAIL || 'admin@gmail.com', password: process.env.SMOKE_PASS || 'admin123' }),
+    }).then((r) => r.json());
+    token = login.token;
+    console.log(`logged in as ${login.user.name} (${login.user.role})\n`);
+  } else {
+    console.log('running anonymously\n');
+  }
 
   const routes = process.argv.slice(2);
   let failures = 0;

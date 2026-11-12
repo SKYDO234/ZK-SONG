@@ -12,6 +12,7 @@ import {
   Disc3,
   Music2,
 } from 'lucide-react';
+import { mediaUrl } from '../lib/apiBase';
 import { useApp } from '../context/AppContext';
 import ArtistOfMonthBadge from './ArtistOfMonthBadge';
 
@@ -94,8 +95,8 @@ export default function GlobalPlayer() {
               {videoModalSong.video_url ? (
                 <video
                   key={videoModalSong.video_url}
-                  src={videoModalSong.video_url}
-                  poster={videoModalSong.thumbnail_url}
+                  src={mediaUrl(videoModalSong.video_url)}
+                  poster={mediaUrl(videoModalSong.thumbnail_url)}
                   controls
                   autoPlay
                   className="w-full h-full object-contain"
@@ -147,7 +148,7 @@ export default function GlobalPlayer() {
             <div className="flex items-center gap-3 w-full sm:w-72 min-w-0">
               <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 dark:border-white/15 shadow-md">
                 <img
-                  src={currentSong.thumbnail_url}
+                  src={mediaUrl(currentSong.thumbnail_url)}
                   alt={currentSong.title}
                   className={`w-full h-full object-cover ${isPlaying ? 'scale-105 transition-transform duration-700' : ''}`}
                 />
