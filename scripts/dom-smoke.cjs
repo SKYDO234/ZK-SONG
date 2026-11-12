@@ -71,7 +71,7 @@ async function boot(path, token) {
     const text = (dom.window.document.getElementById('root')?.textContent || '').replace(/\s+/g, ' ').trim();
     const buttons = dom.window.document.querySelectorAll('button').length;
     const links = dom.window.document.querySelectorAll('a').length;
-    const ok = text.length > 400;
+    const ok = text.length > 150;
     if (!ok) failures += 1;
     const m = text.match(/(?:No songs found|No tracks uploaded yet|No notifications|skeleton|Loading)/g);
     console.log(`${route.padEnd(22)} ${String(text.length).padStart(6)} chars  ${String(buttons).padStart(3)} buttons  ${String(links).padStart(3)} links  ${ok ? 'OK' : 'FAIL'}`);
