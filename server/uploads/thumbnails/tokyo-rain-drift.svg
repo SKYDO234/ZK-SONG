@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+    <defs>
+      <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#10b981" />
+        <stop offset="55%" stop-color="#059669" />
+        <stop offset="100%" stop-color="#042f2e" />
+      </linearGradient>
+      <radialGradient id="flare" cx="75%" cy="25%" r="55%">
+        <stop offset="0%" stop-color="rgba(255,255,255,0.35)" />
+        <stop offset="100%" stop-color="rgba(0,0,0,0)" />
+      </radialGradient>
+    </defs>
+    <rect width="600" height="600" fill="url(#bg)" />
+    <rect width="600" height="600" fill="url(#flare)" />
+    <circle cx="300" cy="245" r="145" fill="rgba(9,9,11,0.62)" stroke="rgba(255,255,255,0.28)" stroke-width="4" />
+    <circle cx="300" cy="245" r="108" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2" stroke-dasharray="12 8" />
+    <circle cx="300" cy="245" r="70" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" />
+    <circle cx="300" cy="245" r="28" fill="#10b981" stroke="#ffffff" stroke-width="4" />
+    <rect x="40" y="40" width="160" height="38" rx="19" fill="rgba(9,9,11,0.72)" />
+    <text x="120" y="64" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="700" letter-spacing="1">LO-FI BEATS</text>
+    
+    <rect x="34" y="424" width="532" height="140" rx="24" fill="rgba(9,9,11,0.78)" stroke="rgba(255,255,255,0.14)" stroke-width="1.5" />
+    <text x="64" y="482" fill="#ffffff" font-family="system-ui, sans-serif" font-size="30" font-weight="800">Tokyo Rain Drift</text>
+    <text x="64" y="525" fill="rgba(255,255,255,0.78)" font-family="system-ui, sans-serif" font-size="19" font-weight="600">Kaelen Rivera • ZK-SONG MASTER</text>
+  </svg>
