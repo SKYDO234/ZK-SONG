@@ -14,6 +14,7 @@
 // ============================================================================
 
 import bcrypt from 'bcryptjs';
+import { getAppRoot } from '../paths.js';
 import { translateSql, mapParams } from './translate.js';
 import { createPostgresStore } from './postgres.js';
 
@@ -158,12 +159,9 @@ export { DEFAULT_SETTINGS };
 async function createSqliteStore(opts = {}) {
   const fs = await import('node:fs');
   const path = await import('node:path');
-  const url = await import('node:url');
   const { DatabaseSync } = await import('node:sqlite');
 
-  const here = path.dirname(url.fileURLToPath(import.meta.url));
-  // api/_lib/db → repository root
-  const root = path.resolve(here, '..', '..', '..');
+  const root = getAppRoot();
   const dataDir = process.env.DATA_DIR || path.join(root, 'server', 'data');
   if (dataDir !== ':memory:') fs.mkdirSync(dataDir, { recursive: true });
 

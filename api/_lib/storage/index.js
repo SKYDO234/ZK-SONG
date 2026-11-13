@@ -11,7 +11,7 @@
 // ============================================================================
 
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { getAppRoot } from '../paths.js';
 import { createLocalStorage, FOLDERS } from './local.js';
 import { createSupabaseStorage } from './supabase.js';
 
@@ -39,8 +39,7 @@ export function createStorage(env = process.env) {
   }
 
   if (kind === 'local') {
-    const here = path.dirname(fileURLToPath(import.meta.url));
-    const root = env.UPLOADS_DIR || path.resolve(here, '..', '..', '..', 'server', 'uploads');
+    const root = env.UPLOADS_DIR || path.join(getAppRoot(), 'server', 'uploads');
     return createLocalStorage({ root });
   }
 

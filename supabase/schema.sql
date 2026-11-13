@@ -147,9 +147,11 @@ create index if not exists activity_logs_created_idx on public.activity_logs (cr
 
 -- ------------------------------------------------------------ storage bucket
 -- Public bucket for audio, covers, videos, avatars and branding.
-insert into storage.buckets (id, name, public)
-values ('media', 'media', true)
-on conflict (id) do nothing;
+-- The API also creates this itself on first upload (api/_lib/storage/supabase.js),
+-- so running this file is optional.
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('media', 'media', true, 120000000)
+on conflict (id) do update set public = true, file_size_limit = 120000000;
 
 -- Everyone may read public media; writes happen through the service-role key
 -- used by the edge function, which bypasses RLS.
