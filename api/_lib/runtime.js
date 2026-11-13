@@ -17,11 +17,18 @@ import { pipeline } from 'node:stream/promises';
 const BODY_LIMIT = 32 * 1024 * 1024; // JSON metadata only; files never come this way
 
 let ready = null;
+/** Last boot failure, kept so /api/health can explain it on demand. */
+let lastBootFailure = null;
+
+export function getLastBootFailure() {
+  return lastBootFailure;
+}
 
 /** Boot the API once per process (pool + schema + admin). */
 export async function getApi() {
   if (!ready) {
     ready = (async () => {
+      lastBootFailure = null;
       const db = await getStore();
       const storage = getStorage();
       return createApi({ db, storage });
@@ -175,6 +182,59 @@ export function dbTargetSummary(env = process.env) {
 }
 
 /**
+ * Full deployment diagnosis as JSON. Always answers 200 with a report — the
+ * point is to explain a broken deployment, so it must not depend on the thing
+ * that is broken.
+ */
+export async function buildDiagnostics(env = process.env) {
+  const config = diagnoseConfig(env);
+  const target = dbTargetSummary(env);
+  const report = {
+    ok: config.ok && !lastBootFailure,
+    time: new Date().toISOString(),
+    platform: {
+      vercel: Boolean(env.VERCEL),
+      netlify: Boolean(env.NETLIFY),
+      lambda: Boolean(env.AWS_LAMBDA_FUNCTION_NAME),
+    },
+    variables: {
+      DATABASE_URL: Boolean(env.DATABASE_URL || env.POSTGRES_URL),
+      SUPABASE_URL: Boolean(env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL),
+      SUPABASE_SERVICE_ROLE_KEY: Boolean(env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY),
+      JWT_SECRET: Boolean(env.JWT_SECRET || env.APP_JWT_SECRET),
+      ADMIN_PASSWORD: Boolean(env.ADMIN_PASSWORD),
+      SUPABASE_BUCKET: env.SUPABASE_BUCKET || 'media',
+    },
+    ...(target ? { database_target: target } : {}),
+    missing: config.missing,
+    warnings: config.warnings,
+    boot_failure: lastBootFailure,
+    credential_recovery: globalThis.__zksongCredentialRecovery || null,
+  };
+
+  // Live check, bounded so a hanging host cannot stall the report.
+  if (env.DATABASE_URL || env.POSTGRES_URL) {
+    try {
+      const db = await Promise.race([
+        getStore(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
+      ]);
+      report.database = { reachable: true, dialect: db.dialect };
+      const row = await db.get('select count(*) as c from users');
+      report.database.users = Number(row?.c ?? 0);
+    } catch (err) {
+      report.database = {
+        reachable: false,
+        reason: err?.reason || err?.code || 'unknown',
+        message: String(err?.message || err).slice(0, 300),
+      };
+    }
+  }
+
+  return report;
+}
+
+/**
  * Check every variable the API needs, without leaking any value.
  *
  * Reporting one missing key at a time turns a five-minute fix into five
@@ -275,6 +335,40 @@ function describeBootFailure(err) {
       ...(t ? { database_target: t } : {}),
     };
   }
+  // node-postgres raises this from its own connectionTimeoutMillis when the TCP
+  // handshake never completes — an unreachable address, not a slow query.
+  // The wording differs by layer: pg-pool says "timeout exceeded when trying to
+  // connect", the pg client says "Connection terminated due to connection
+  // timeout". Both mean the TCP handshake never completed.
+  if (
+    code === 'ETIMEDOUT' ||
+    message.includes('timeout exceeded when trying to connect') ||
+    message.includes('connection timeout') ||
+    (message.includes('connection terminated') && message.includes('time'))
+  ) {
+    const t = dbTargetSummary();
+    const directHost = t && /^db\.[a-z0-9]+\.supabase\.co$/i.test(t.host);
+    if (directHost) {
+      return {
+        ...base,
+        code: 'DB_TIMEOUT_IPV6',
+        detail:
+          `The host ${t.host} is the direct Supabase endpoint, which on the Free plan ` +
+          'resolves only to IPv6. This runtime has no IPv6 route, so the connection is ' +
+          'accepted by DNS and then hangs. Replace DATABASE_URL with the Session pooler ' +
+          'string from Supabase → Connect (…pooler.supabase.com, port 5432).',
+      };
+    }
+    return {
+      ...base,
+      code: 'DB_TIMEOUT',
+      detail:
+        `No answer from ${t ? `${t.host}:${t.port}` : 'the database host'} within 8 seconds. ` +
+        'Either the pooler host does not belong to this project (the aws-N index differs ' +
+        'per project), or the port is wrong. Copy the string verbatim from ' +
+        'Supabase → Connect → Session pooler.',
+    };
+  }
   if (code === 'ECONNREFUSED') {
     return {
       ...base,
@@ -332,11 +426,14 @@ export async function handleNodeRequest(req, res, { prefix = '', env = process.e
     // error page — which the browser then fails to JSON.parse, hiding the real
     // cause behind "Unexpected token 'A'". Answer with JSON instead.
     const reason = describeBootFailure(err);
+    lastBootFailure = reason;
     const config = diagnoseConfig(env);
     console.error('[ZK-SONG] API boot failed:', err);
     if (!res.headersSent) {
+      const target = dbTargetSummary(env);
       sendJson(res, 503, {
         ...reason,
+        ...(target ? { database_target: target } : {}),
         ...(config.missing.length ? { missing: config.missing } : {}),
       });
     }
