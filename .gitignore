@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+server/data/*.sqlite-journal
+server/data/*.sqlite-wal
+server/data/*.sqlite-shm
+.DS_Store
+
+# SQLite runtime database (seeded on first boot by server/db.js)
+server/data/*.sqlite
+server/data/*.sqlite-*

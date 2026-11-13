@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+server/data
+server/uploads/audio
+server/uploads/thumbnails
+server/uploads/videos
+server/uploads/avatars
+scripts
+deploy
+supabase
+netlify
+*.log

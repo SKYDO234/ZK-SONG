@@ -1,0 +1,28 @@
+# Render blueprint — deploys ZK-SONG as one service with a persistent disk.
+services:
+  - type: web
+    name: zk-song
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: DATA_DIR
+        value: /data
+      - key: UPLOADS_DIR
+        value: /data/uploads
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ALLOWED_ORIGIN
+        sync: false
+    disk:
+      name: zk-song-storage
+      mountPath: /data
+      sizeGB: 5
