@@ -335,6 +335,40 @@ function describeBootFailure(err) {
       ...(t ? { database_target: t } : {}),
     };
   }
+  // node-postgres raises this from its own connectionTimeoutMillis when the TCP
+  // handshake never completes — an unreachable address, not a slow query.
+  // The wording differs by layer: pg-pool says "timeout exceeded when trying to
+  // connect", the pg client says "Connection terminated due to connection
+  // timeout". Both mean the TCP handshake never completed.
+  if (
+    code === 'ETIMEDOUT' ||
+    message.includes('timeout exceeded when trying to connect') ||
+    message.includes('connection timeout') ||
+    (message.includes('connection terminated') && message.includes('time'))
+  ) {
+    const t = dbTargetSummary();
+    const directHost = t && /^db\.[a-z0-9]+\.supabase\.co$/i.test(t.host);
+    if (directHost) {
+      return {
+        ...base,
+        code: 'DB_TIMEOUT_IPV6',
+        detail:
+          `The host ${t.host} is the direct Supabase endpoint, which on the Free plan ` +
+          'resolves only to IPv6. This runtime has no IPv6 route, so the connection is ' +
+          'accepted by DNS and then hangs. Replace DATABASE_URL with the Session pooler ' +
+          'string from Supabase → Connect (…pooler.supabase.com, port 5432).',
+      };
+    }
+    return {
+      ...base,
+      code: 'DB_TIMEOUT',
+      detail:
+        `No answer from ${t ? `${t.host}:${t.port}` : 'the database host'} within 8 seconds. ` +
+        'Either the pooler host does not belong to this project (the aws-N index differs ' +
+        'per project), or the port is wrong. Copy the string verbatim from ' +
+        'Supabase → Connect → Session pooler.',
+    };
+  }
   if (code === 'ECONNREFUSED') {
     return {
       ...base,
@@ -396,8 +430,10 @@ export async function handleNodeRequest(req, res, { prefix = '', env = process.e
     const config = diagnoseConfig(env);
     console.error('[ZK-SONG] API boot failed:', err);
     if (!res.headersSent) {
+      const target = dbTargetSummary(env);
       sendJson(res, 503, {
         ...reason,
+        ...(target ? { database_target: target } : {}),
         ...(config.missing.length ? { missing: config.missing } : {}),
       });
     }

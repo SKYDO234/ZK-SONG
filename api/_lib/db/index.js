@@ -242,7 +242,9 @@ async function createPgStore(opts = {}) {
     // otherwise multiply the pool against Supabase's connection quota.
     max: Number(process.env.PGPOOL_MAX || (isServerless ? 1 : 3)),
     idleTimeoutMillis: 10_000,
-    connectionTimeoutMillis: 12_000,
+    // Stay well under the platform's invocation limit so a hang becomes a
+    // readable JSON error instead of a killed function.
+    connectionTimeoutMillis: Number(process.env.PG_CONNECT_TIMEOUT_MS || 8_000),
   });
 
   // Node gives a bare "connect ENETUNREACH" when a host resolves only to IPv6
