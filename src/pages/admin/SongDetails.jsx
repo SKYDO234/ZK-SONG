@@ -48,14 +48,15 @@ import {
   inputClass,
   EmptyState,
 } from '../../components/Common';
+import { readJson } from '../../lib/http';
 
 function MetaRow({ icon: Icon, label, value, mono = false }) {
   return (
     <div className="flex items-start gap-2.5 py-2">
-      <Icon className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+      <Icon className="w-3.5 h-3.5 text-neutral-400 mt-0.5 shrink-0" />
       <div className="min-w-0">
-        <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">{label}</p>
-        <p className={`text-xs font-bold text-slate-800 dark:text-slate-200 break-words ${mono ? 'font-mono text-[11px]' : ''}`}>
+        <p className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400">{label}</p>
+        <p className={`text-xs font-bold text-neutral-100 dark:text-neutral-200 break-words ${mono ? 'font-mono text-[11px]' : ''}`}>
           {value || '—'}
         </p>
       </div>
@@ -83,7 +84,7 @@ export default function AdminSongDetails() {
     setError('');
     try {
       const res = await authFetch(`/api/admin/songs/${id}`);
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Failed to load song');
       setData(json);
     } catch (err) {
@@ -103,7 +104,7 @@ export default function AdminSongDetails() {
     setBusy('approve');
     try {
       const res = await authFetch(`/api/admin/songs/${id}/approve`, { method: 'POST' });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Approval failed');
       notify(json.message, 'success');
       await load();
@@ -124,7 +125,7 @@ export default function AdminSongDetails() {
           reason: rejectReason.trim() || 'Did not meet studio quality or copyright verification standards.',
         }),
       });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Rejection failed');
       notify(json.message, 'success');
       refreshBootstrap();
@@ -140,7 +141,7 @@ export default function AdminSongDetails() {
     setDeleteLoading(true);
     try {
       const res = await authFetch(`/api/admin/songs/${id}`, { method: 'DELETE' });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Delete failed');
       notify(json.message, 'success');
       refreshBootstrap();
@@ -171,7 +172,7 @@ export default function AdminSongDetails() {
   if (error || !song) {
     return (
       <DashboardLayout variant="admin" title="Song Not Found" subtitle="This release may have been rejected and removed">
-        <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/70">
+        <div className="rounded-2xl border border-white/10 dark:border-white/10 bg-[#101013]/70">
           <EmptyState
             icon={AlertTriangle}
             title="Song unavailable"
@@ -197,7 +198,7 @@ export default function AdminSongDetails() {
       }
     >
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/70">
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 dark:border-white/10 bg-[#101013]/70">
         <div className="absolute inset-0 opacity-25">
           <img src={mediaUrl(song.thumbnail_url)} alt="" className="w-full h-full object-cover blur-2xl scale-110" />
         </div>
@@ -210,7 +211,7 @@ export default function AdminSongDetails() {
             />
             {song.is_artist_of_the_month && (
               <div className="absolute -top-2 -left-2">
-                <span className="px-2 py-1 rounded-lg aotm-gold-shimmer text-slate-950 text-[10px] font-black inline-flex items-center gap-1 shadow-lg">
+                <span className="px-2 py-1 rounded-lg aotm-gold-shimmer text-neutral-950 text-[10px] font-black inline-flex items-center gap-1 shadow-lg">
                   <Crown className="w-3 h-3 fill-slate-950" /> AOTM
                 </span>
               </div>
@@ -223,22 +224,22 @@ export default function AdminSongDetails() {
               {song.is_cover ? (
                 <span className="px-2 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 text-[11px] font-extrabold">COVER SONG: YES</span>
               ) : (
-                <span className="px-2 py-1 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30 text-[11px] font-extrabold">COVER SONG: NO</span>
+                <span className="px-2 py-1 rounded-full bg-amber-400/15 text-amber-500 dark:text-amber-200 border border-amber-400/30 text-[11px] font-extrabold">COVER SONG: NO</span>
               )}
               {song.has_video && (
-                <span className="px-2 py-1 rounded-full bg-violet-500/15 text-violet-600 dark:text-violet-300 border border-violet-500/30 text-[11px] font-extrabold inline-flex items-center gap-1">
+                <span className="px-2 py-1 rounded-full bg-amber-400/15 text-amber-500 dark:text-amber-200 border border-amber-400/30 text-[11px] font-extrabold inline-flex items-center gap-1">
                   <Video className="w-3 h-3" /> MUSIC VIDEO
                 </span>
               )}
             </div>
 
             <h2 className="mt-2.5 text-2xl sm:text-3xl font-black tracking-tight">{song.title}</h2>
-            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-sm font-bold text-neutral-400 dark:text-neutral-400 mt-0.5">
               {song.artist}
               {song.featured_artist ? ` feat. ${song.featured_artist}` : ''} • {song.genre} • {song.release_year}
             </p>
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-slate-500">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-neutral-400">
               <span className="inline-flex items-center gap-1"><Clock3 className="w-3 h-3" /> {song.duration_formatted || formatDuration(song.duration)}</span>
               <span className="inline-flex items-center gap-1"><Gauge className="w-3 h-3" /> {song.bpm} BPM</span>
               <span className="inline-flex items-center gap-1"><Play className="w-3 h-3" /> {formatNumber(song.plays_count)} plays</span>
@@ -304,43 +305,43 @@ export default function AdminSongDetails() {
           <SectionCard title="Media Playback" subtitle="Full-quality streaming preview and download controls">
             <div className="p-4 space-y-4">
               <div>
-                <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+                <p className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-400 mb-2 flex items-center gap-1.5">
                   <FileAudio className="w-3.5 h-3.5" /> Audio Track
                 </p>
                 <audio controls preload="metadata" src={mediaUrl(song.audio_url)} className="w-full h-11">
                   Your browser does not support audio playback.
                 </audio>
-                <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-slate-500">
+                <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-neutral-400">
                   <span className="font-mono truncate max-w-[240px]">{song.audio_filename}</span>
                   <span>{formatBytes(song.audio_size)}</span>
                   <span className="uppercase">{song.audio_mime}</span>
-                  <button onClick={() => copy(song.audio_url, 'Audio URL')} className="text-violet-500 font-bold hover:underline inline-flex items-center gap-1">
+                  <button onClick={() => copy(song.audio_url, 'Audio URL')} className="text-amber-400 font-bold hover:underline inline-flex items-center gap-1">
                     <Copy className="w-3 h-3" /> Copy URL
                   </button>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-200 dark:border-white/10">
-                <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+              <div className="pt-4 border-t border-white/10 dark:border-white/10">
+                <p className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-400 mb-2 flex items-center gap-1.5">
                   <Film className="w-3.5 h-3.5" /> Music Video
                 </p>
                 {song.has_video ? (
                   <>
-                    <video controls preload="metadata" poster={mediaUrl(song.thumbnail_url)} src={mediaUrl(song.video_url)} className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-black max-h-[300px]">
+                    <video controls preload="metadata" poster={mediaUrl(song.thumbnail_url)} src={mediaUrl(song.video_url)} className="w-full rounded-xl border border-white/10 dark:border-white/10 bg-black max-h-[300px]">
                       Your browser does not support video playback.
                     </video>
-                    <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-slate-500">
+                    <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-neutral-400">
                       <span className="font-mono truncate max-w-[240px]">{song.video_filename}</span>
                       <span>{formatBytes(song.video_size)}</span>
-                      <button onClick={() => copy(song.video_url, 'Video URL')} className="text-violet-500 font-bold hover:underline inline-flex items-center gap-1">
+                      <button onClick={() => copy(song.video_url, 'Video URL')} className="text-amber-400 font-bold hover:underline inline-flex items-center gap-1">
                         <Copy className="w-3 h-3" /> Copy URL
                       </button>
                     </div>
                   </>
                 ) : (
-                  <div className="rounded-xl border border-dashed border-slate-300 dark:border-white/15 p-6 text-center">
-                    <Film className="w-6 h-6 mx-auto text-slate-400" />
-                    <p className="text-xs text-slate-500 mt-1.5">No music video was attached to this release.</p>
+                  <div className="rounded-xl border border-dashed border-white/15 dark:border-white/15 p-6 text-center">
+                    <Film className="w-6 h-6 mx-auto text-neutral-400" />
+                    <p className="text-xs text-neutral-400 mt-1.5">No music video was attached to this release.</p>
                   </div>
                 )}
               </div>
@@ -351,14 +352,14 @@ export default function AdminSongDetails() {
           <SectionCard title="Release Notes & Lyrics">
             <div className="p-4 space-y-4">
               <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Description</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 mb-1">Description</p>
+                <p className="text-sm text-neutral-300 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap">
                   {song.description || 'No description provided.'}
                 </p>
               </div>
-              <div className="pt-3 border-t border-slate-200 dark:border-white/10">
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Lyrics</p>
-                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap max-h-56 overflow-y-auto">
+              <div className="pt-3 border-t border-white/10 dark:border-white/10">
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 mb-1">Lyrics</p>
+                <p className="text-sm text-neutral-300 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap max-h-56 overflow-y-auto">
                   {song.lyrics || 'Instrumental / no lyrics submitted.'}
                 </p>
               </div>
@@ -404,11 +405,11 @@ export default function AdminSongDetails() {
                 <img
                   src={data.uploader?.avatar_url || monogramAvatar(data.uploader?.name, data.uploader?.id)}
                   alt={data.uploader?.name}
-                  className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-white/15"
+                  className="w-12 h-12 rounded-xl object-cover border border-white/10 dark:border-white/15"
                 />
                 <div className="min-w-0">
                   <p className="font-extrabold text-sm truncate">{data.uploader?.name}</p>
-                  <p className="text-[11px] text-slate-500 truncate">{data.uploader?.email}</p>
+                  <p className="text-[11px] text-neutral-400 truncate">{data.uploader?.email}</p>
                 </div>
               </div>
               {data.uploader?.is_artist_of_the_month && (
@@ -416,7 +417,7 @@ export default function AdminSongDetails() {
                   <ArtistOfMonthBadge size="xs" monthLabel={data.uploader.artist_of_month_badge?.month} />
                 </div>
               )}
-              <div className="mt-3 divide-y divide-slate-100 dark:divide-white/5">
+              <div className="mt-3 divide-y divide-white/[0.06] dark:divide-white/5">
                 <MetaRow icon={Mail} label="Email" value={data.uploader?.email} />
                 <MetaRow icon={Globe} label="Country" value={data.uploader?.country} />
                 <MetaRow icon={Music4} label="Primary Genre" value={data.uploader?.primary_genre} />
@@ -430,9 +431,9 @@ export default function AdminSongDetails() {
                   { label: 'Pending', v: data.uploader?.stats?.pending },
                   { label: 'Rejected', v: data.uploader?.stats?.rejected },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-xl bg-slate-100 dark:bg-white/5 p-2.5 text-center">
+                  <div key={s.label} className="rounded-xl bg-white/[0.04] dark:bg-white/[0.05] p-2.5 text-center">
                     <p className="text-lg font-black leading-none">{s.v ?? 0}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">{s.label}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 mt-1">{s.label}</p>
                   </div>
                 ))}
               </div>
@@ -454,7 +455,7 @@ export default function AdminSongDetails() {
                     />
                     <div className="min-w-0">
                       <p className="font-extrabold text-sm truncate">{data.artist_of_the_month.winner.name}</p>
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[11px] text-neutral-400">
                         {data.artist_of_the_month.winner.monthly_approved_count} approved this month
                       </p>
                     </div>
@@ -464,7 +465,7 @@ export default function AdminSongDetails() {
                   </div>
                 </>
               ) : (
-                <p className="text-xs text-slate-500">No crowned artist yet this month.</p>
+                <p className="text-xs text-neutral-400">No crowned artist yet this month.</p>
               )}
             </div>
           </SectionCard>
@@ -473,7 +474,7 @@ export default function AdminSongDetails() {
             <p className="flex items-center gap-1.5 text-xs font-extrabold text-rose-600 dark:text-rose-300">
               <AlertTriangle className="w-3.5 h-3.5" /> Danger Zone
             </p>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">
+            <p className="text-[11px] text-neutral-300 dark:text-neutral-400 mt-1.5 leading-relaxed">
               Rejecting or deleting this release permanently erases the audio, cover art, and video
               from disk storage. This cannot be undone.
             </p>
@@ -490,13 +491,13 @@ export default function AdminSongDetails() {
       {/* Reject modal */}
       {rejectOpen && (
         <div className="fixed inset-0 z-[97] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm" onClick={() => setRejectOpen(false)} role="presentation" />
-          <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-2xl animate-scale-in">
-            <div className="p-5 border-b border-slate-200 dark:border-white/10">
+          <div className="fixed inset-0 bg-[#070708]/70 backdrop-blur-sm" onClick={() => setRejectOpen(false)} role="presentation" />
+          <div className="relative w-full max-w-lg rounded-2xl bg-[#101013] border border-white/10 dark:border-white/10 shadow-2xl animate-scale-in">
+            <div className="p-5 border-b border-white/10 dark:border-white/10">
               <h3 className="font-extrabold flex items-center gap-2">
                 <XCircle className="w-4 h-4 text-rose-500" /> Reject & Permanently Remove
               </h3>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-neutral-400 mt-1">
                 “{song.title}” will be erased from the database and storage, and the artist will be notified.
               </p>
             </div>
@@ -520,14 +521,14 @@ export default function AdminSongDetails() {
                     key={p}
                     type="button"
                     onClick={() => setRejectReason(p)}
-                    className="px-2 py-1 rounded-lg border border-slate-200 dark:border-white/10 text-[10px] font-bold hover:bg-slate-100 dark:hover:bg-white/10"
+                    className="px-2 py-1 rounded-lg border border-white/10 dark:border-white/10 text-[10px] font-bold hover:bg-white/[0.06] dark:hover:bg-white/10"
                   >
                     {p}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="px-5 py-4 border-t border-slate-200 dark:border-white/10 flex justify-end gap-2">
+            <div className="px-5 py-4 border-t border-white/10 dark:border-white/10 flex justify-end gap-2">
               <button onClick={() => setRejectOpen(false)} className={ghostBtn}>Cancel</button>
               <button
                 onClick={doReject}
@@ -544,16 +545,16 @@ export default function AdminSongDetails() {
       {/* Delete modal */}
       {deleteOpen && (
         <div className="fixed inset-0 z-[97] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm" onClick={() => setDeleteOpen(false)} role="presentation" />
-          <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-2xl animate-scale-in">
+          <div className="fixed inset-0 bg-[#070708]/70 backdrop-blur-sm" onClick={() => setDeleteOpen(false)} role="presentation" />
+          <div className="relative w-full max-w-md rounded-2xl bg-[#101013] border border-white/10 dark:border-white/10 shadow-2xl animate-scale-in">
             <div className="p-5">
               <h3 className="font-extrabold">Delete permanently?</h3>
-              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+              <p className="text-xs text-neutral-400 mt-1.5 leading-relaxed">
                 “{song.title}” and all associated media files will be erased. This does not count as a
                 moderation rejection.
               </p>
             </div>
-            <div className="px-5 py-4 border-t border-slate-200 dark:border-white/10 flex justify-end gap-2">
+            <div className="px-5 py-4 border-t border-white/10 dark:border-white/10 flex justify-end gap-2">
               <button onClick={() => setDeleteOpen(false)} className={ghostBtn}>Cancel</button>
               <button
                 onClick={doDelete}

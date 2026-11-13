@@ -30,6 +30,7 @@ import { mediaUrl } from '../lib/apiBase';
 import { monogramAvatar } from '../components/avatar';
 import { useApp } from '../context/AppContext';
 import ArtistOfMonthBadge from '../components/ArtistOfMonthBadge';
+import { readJson } from '../lib/http';
 
 export default function LandingPage() {
   const {
@@ -103,7 +104,7 @@ export default function LandingPage() {
           'X-API-Key': keyToUse,
         },
       });
-      const data = await res.json();
+      const data = await readJson(res);
       if (!res.ok) {
         setSimError(data);
         setSimResponse(null);
@@ -121,41 +122,41 @@ export default function LandingPage() {
   const leaderboard = artistOfTheMonth?.leaderboard || [];
 
   return (
-    <div className="min-h-screen pb-28 bg-slate-50 dark:bg-[#07070c] text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen pb-28 bg-[#0a0a0b] dark:bg-[#07070c] text-white dark:text-neutral-100">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-white/10 bg-white/85 dark:bg-[#07070c]/85 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-white/10/80 dark:border-white/10 bg-[#070708]/90 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3 group">
             <img
               src={mediaUrl(settings.logo_url) || '/zk-logo.svg'}
               alt={settings.site_name}
-              className="w-11 h-11 rounded-2xl object-cover shadow-lg shadow-violet-500/20 border border-violet-500/30 group-hover:scale-105 transition-transform"
+              className="w-11 h-11 rounded-2xl object-cover border border-amber-400/30 group-hover:scale-105 transition-transform"
             />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-violet-600 via-fuchsia-500 to-cyan-500 dark:from-white dark:via-violet-200 dark:to-cyan-300 bg-clip-text text-transparent">
+                <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-amber-500 via-amber-400 to-amber-400 dark:from-white dark:via-amber-100 dark:to-amber-200 bg-clip-text text-transparent">
                   {settings.site_name}
                 </span>
-                <span className="hidden sm:inline-block text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-600 dark:text-violet-300 border border-violet-500/30">
+                <span className="hidden sm:inline-block text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-500 dark:text-amber-200 border border-amber-400/30">
                   {settings.accent_badge_text || 'STUDIO v2.6'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block truncate max-w-xs">
+              <p className="text-[11px] text-neutral-400 dark:text-neutral-400 hidden sm:block truncate max-w-xs">
                 {settings.site_tagline}
               </p>
             </div>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-slate-600 dark:text-slate-300">
-            <a href="#artist-of-month" className="hover:text-violet-500 transition-colors flex items-center gap-1.5">
+          <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-neutral-300 dark:text-neutral-300">
+            <a href="#artist-of-month" className="hover:text-amber-400 transition-colors flex items-center gap-1.5">
               <Crown className="w-4 h-4 text-amber-400" />
               Artist of the Month
             </a>
-            <a href="#catalog" className="hover:text-violet-500 transition-colors">
+            <a href="#catalog" className="hover:text-amber-400 transition-colors">
               Approved Songs
             </a>
-            <a href="#external-api" className="hover:text-violet-500 transition-colors flex items-center gap-1.5">
-              <KeyRound className="w-4 h-4 text-cyan-400" />
+            <a href="#external-api" className="hover:text-amber-400 transition-colors flex items-center gap-1.5">
+              <KeyRound className="w-4 h-4 text-amber-300" />
               REST API
             </a>
           </nav>
@@ -163,7 +164,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-2.5">
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-200 hover:border-violet-500/40 transition-all"
+              className="p-2.5 rounded-xl border border-white/10 dark:border-white/10 bg-white/[0.04] dark:bg-white/[0.05] text-neutral-200 dark:text-neutral-200 hover:border-amber-400/40 transition-all"
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
@@ -174,14 +175,14 @@ export default function LandingPage() {
                 {user.role === 'admin' && (
                   <Link
                     to="/admin/dashboard"
-                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition-all"
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-neutral-950 font-extrabold text-xs sm:text-sm transition-all"
                   >
                     Admin Panel
                   </Link>
                 )}
                 <Link
                   to="/user/dashboard"
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-bold text-xs sm:text-sm shadow-lg shadow-violet-500/25 transition-all"
+                  className="px-4 py-2.5 rounded-xl btn-gold font-bold text-xs sm:text-sm transition-all"
                 >
                   User Panel
                 </Link>
@@ -190,13 +191,13 @@ export default function LandingPage() {
               <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-white/15 hover:bg-slate-100 dark:hover:bg-white/10 text-xs sm:text-sm font-bold transition-all"
+                  className="px-4 py-2.5 rounded-xl border border-white/15 dark:border-white/15 hover:bg-white/[0.06] dark:hover:bg-white/10 text-xs sm:text-sm font-bold transition-all"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/register"
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white text-xs sm:text-sm font-bold shadow-lg shadow-violet-500/25 transition-all"
+                  className="px-4 py-2.5 rounded-xl btn-gold text-xs sm:text-sm font-bold transition-all"
                 >
                   Start Uploading
                 </Link>
@@ -207,27 +208,27 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 pb-16 sm:pt-16 sm:pb-20 border-b border-slate-200/70 dark:border-white/10">
+      <section className="relative overflow-hidden pt-12 pb-16 sm:pt-16 sm:pb-20 border-b border-white/10/70 dark:border-white/10">
         {/* Ambient Glows */}
-        <div className="pointer-events-none absolute -top-40 left-1/4 w-96 h-96 rounded-full bg-violet-600/20 blur-[120px]" />
-        <div className="pointer-events-none absolute top-20 right-1/4 w-96 h-96 rounded-full bg-cyan-500/15 blur-[120px]" />
+        <div className="pointer-events-none absolute -top-40 left-1/4 w-96 h-96 rounded-full bg-amber-500/20 blur-[120px]" />
+        <div className="pointer-events-none absolute top-20 right-1/4 w-96 h-96 rounded-full bg-amber-400/15 blur-[120px]" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
           <div className="grid lg:grid-cols-12 gap-10 items-center">
             <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-600 dark:text-violet-300 text-xs font-bold">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-500 dark:text-amber-200 text-xs font-bold">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Complete Artist Publishing, A&R Moderation & External Music REST API</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08]">
                 Publish Studio Music.{' '}
-                <span className="bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-amber-400 via-amber-400 to-amber-300 bg-clip-text text-transparent">
                   Stream Everywhere.
                 </span>
               </h1>
 
-              <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
+              <p className="text-base sm:text-lg text-neutral-300 dark:text-neutral-300 max-w-2xl leading-relaxed">
                 {settings.site_description}
               </p>
 
@@ -235,7 +236,7 @@ export default function LandingPage() {
               <div className="flex flex-wrap items-center gap-3.5 pt-1">
                 <Link
                   to={user ? '/user/upload' : '/register'}
-                  className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-extrabold text-sm shadow-xl shadow-violet-500/30 transition-all hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl btn-gold font-extrabold text-sm transition-all hover:-translate-y-0.5"
                 >
                   <UploadCloud className="w-5 h-5" />
                   <span>{user ? 'Upload a New Song' : 'Create Artist Account'}</span>
@@ -243,15 +244,15 @@ export default function LandingPage() {
 
                 <a
                   href="#catalog"
-                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-white dark:bg-white/10 hover:bg-slate-100 dark:hover:bg-white/15 border border-slate-200 dark:border-white/15 font-bold text-sm transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-white dark:bg-white/10 hover:bg-white/[0.06] dark:hover:bg-white/15 border border-white/10 dark:border-white/15 font-bold text-sm transition-all"
                 >
-                  <Headphones className="w-4 h-4 text-cyan-400" />
+                  <Headphones className="w-4 h-4 text-amber-300" />
                   <span>Listen to Approved Catalog</span>
                 </a>
 
                 <a
                   href="#external-api"
-                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 font-bold text-sm transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-600 dark:text-amber-200 font-bold text-sm transition-all"
                 >
                   <Terminal className="w-4 h-4" />
                   <span>Live REST API</span>
@@ -264,7 +265,7 @@ export default function LandingPage() {
             <div className="lg:col-span-5">
               <div className="relative rounded-3xl p-6 bg-gradient-to-br from-slate-900 via-[#121124] to-slate-950 text-white border border-white/15 shadow-2xl">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-300 bg-cyan-500/15 border border-cyan-500/30 px-3 py-1 rounded-full">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-200 bg-amber-400/15 border border-amber-400/30 px-3 py-1 rounded-full">
                     <Radio className="w-3.5 h-3.5 animate-pulse" />
                     Featured Studio Master
                   </span>
@@ -286,15 +287,15 @@ export default function LandingPage() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex items-end justify-between p-4">
                         <div>
-                          <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-violet-500/80 text-white">
+                          <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-400/80 text-white">
                             {publicSongs[0].genre}
                           </span>
                           <h3 className="text-xl font-black mt-1.5">{publicSongs[0].title}</h3>
-                          <p className="text-xs text-slate-300">{publicSongs[0].artist}</p>
+                          <p className="text-xs text-neutral-300">{publicSongs[0].artist}</p>
                         </div>
                         <button
                           onClick={() => playSong(publicSongs[0], publicSongs)}
-                          className="w-12 h-12 rounded-full bg-violet-600 hover:bg-violet-500 text-white flex items-center justify-center shadow-xl shadow-violet-600/50 transition-transform hover:scale-105"
+                          className="w-12 h-12 rounded-full bg-amber-500 hover:bg-amber-400 text-white flex items-center justify-center transition-transform hover:scale-105"
                         >
                           {currentSong?.id === publicSongs[0].id && isPlaying ? (
                             <Pause className="w-5 h-5 fill-current" />
@@ -307,26 +308,26 @@ export default function LandingPage() {
 
                     <div className="grid grid-cols-2 gap-2 text-xs bg-white/5 rounded-2xl p-3.5 border border-white/10">
                       <div>
-                        <span className="text-slate-400 block">Musician</span>
-                        <span className="font-semibold text-slate-100 truncate block">
+                        <span className="text-neutral-400 block">Musician</span>
+                        <span className="font-semibold text-neutral-100 truncate block">
                           {publicSongs[0].musician}
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block">Composer</span>
-                        <span className="font-semibold text-slate-100 truncate block">
+                        <span className="text-neutral-400 block">Composer</span>
+                        <span className="font-semibold text-neutral-100 truncate block">
                           {publicSongs[0].composer}
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block">Cover Song</span>
+                        <span className="text-neutral-400 block">Cover Song</span>
                         <span className="font-bold text-emerald-300">
                           {publicSongs[0].is_cover ? 'Yes (Cover)' : 'No (Original)'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block">Music Video</span>
-                        <span className="font-bold text-cyan-300">
+                        <span className="text-neutral-400 block">Music Video</span>
+                        <span className="font-bold text-amber-200">
                           {publicSongs[0].video_url ? 'Available (HD MP4)' : 'Audio Only'}
                         </span>
                       </div>
@@ -335,7 +336,7 @@ export default function LandingPage() {
                     <div className="flex items-center gap-2.5">
                       <button
                         onClick={() => playSong(publicSongs[0], publicSongs)}
-                        className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 font-bold text-xs flex items-center justify-center gap-2"
+                        className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 font-bold text-xs flex items-center justify-center gap-2"
                       >
                         {currentSong?.id === publicSongs[0].id && isPlaying ? (
                           <>
@@ -352,7 +353,7 @@ export default function LandingPage() {
                           onClick={() => openVideoModal(publicSongs[0])}
                           className="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 font-bold text-xs flex items-center gap-1.5"
                         >
-                          <Video className="w-4 h-4 text-violet-300" />
+                          <Video className="w-4 h-4 text-amber-200" />
                           Watch Video
                         </button>
                       )}
@@ -389,15 +390,15 @@ export default function LandingPage() {
             ].map((item, i) => (
               <div
                 key={i}
-                className="p-5 rounded-2xl bg-white dark:bg-slate-900/70 border border-slate-200/80 dark:border-white/10 shadow-sm"
+                className="p-5 rounded-2xl bg-[#101013]/70 border border-white/10/80 dark:border-white/10 shadow-sm"
               >
-                <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-violet-600 to-cyan-500 dark:from-violet-300 dark:to-cyan-300 bg-clip-text text-transparent">
+                <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-amber-500 to-amber-400 dark:from-amber-200 dark:to-amber-200 bg-clip-text text-transparent">
                   {item.value}
                 </div>
-                <div className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1">
+                <div className="text-sm font-bold text-neutral-100 dark:text-neutral-100 mt-1">
                   {item.label}
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{item.sub}</div>
+                <div className="text-xs text-neutral-400 dark:text-neutral-400 mt-0.5">{item.sub}</div>
               </div>
             ))}
           </div>
@@ -408,7 +409,7 @@ export default function LandingPage() {
           ARTIST OF THE MONTH SPOTLIGHT SECTION (AUTOMATICALLY CALCULATED)
          ==================================================================== */}
       {winner && (
-        <section id="artist-of-month" className="py-16 border-b border-slate-200/70 dark:border-white/10">
+        <section id="artist-of-month" className="py-16 border-b border-white/10/70 dark:border-white/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="rounded-3xl p-6 sm:p-10 bg-gradient-to-br from-slate-900 via-[#17132e] to-slate-950 text-white border border-amber-400/30 shadow-2xl relative overflow-hidden">
               <div className="pointer-events-none absolute -right-20 -top-20 w-80 h-80 rounded-full bg-amber-500/15 blur-[100px]" />
@@ -423,7 +424,7 @@ export default function LandingPage() {
                   <h2 className="text-2xl sm:text-4xl font-black mt-3">
                     {winner.name} — {artistOfTheMonth.month_label} Spotlight
                   </h2>
-                  <p className="text-sm text-slate-300 mt-1">
+                  <p className="text-sm text-neutral-300 mt-1">
                     Automatically calculated in real time based on the highest number of approved songs in{' '}
                     <span className="text-amber-300 font-bold">{artistOfTheMonth.month_label}</span>.
                   </p>
@@ -434,16 +435,16 @@ export default function LandingPage() {
                     <div className="text-2xl font-black text-amber-300">
                       {winner.monthly_approved_count}
                     </div>
-                    <div className="text-[11px] text-slate-400 uppercase font-bold">
+                    <div className="text-[11px] text-neutral-400 uppercase font-bold">
                       Approved This Month
                     </div>
                   </div>
                   <div className="h-8 w-px bg-white/15" />
                   <div className="text-center">
-                    <div className="text-2xl font-black text-cyan-300">
+                    <div className="text-2xl font-black text-amber-200">
                       {(winner.monthly_plays || 0).toLocaleString()}
                     </div>
-                    <div className="text-[11px] text-slate-400 uppercase font-bold">
+                    <div className="text-[11px] text-neutral-400 uppercase font-bold">
                       Monthly Streams
                     </div>
                   </div>
@@ -463,11 +464,11 @@ export default function LandingPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-xl font-extrabold">{winner.name}</h3>
                         <ArtistOfMonthBadge size="sm" />
-                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-slate-200 font-semibold">
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-neutral-200 font-semibold">
                           {winner.primary_genre} • {winner.country}
                         </span>
                       </div>
-                      <p className="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-neutral-300 mt-1.5 leading-relaxed">
                         {winner.bio}
                       </p>
                     </div>
@@ -492,13 +493,13 @@ export default function LandingPage() {
                             />
                             <div className="min-w-0 flex-1">
                               <p className="font-bold text-sm text-white truncate">{song.title}</p>
-                              <p className="text-xs text-slate-400 truncate">
+                              <p className="text-xs text-neutral-400 truncate">
                                 {song.genre} • {song.is_cover ? 'Cover Song: Yes' : 'Original'}
                               </p>
                             </div>
                             <button
                               onClick={() => playSong(song, winner.approved_songs)}
-                              className="w-9 h-9 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 flex items-center justify-center shrink-0 font-bold shadow"
+                              className="w-9 h-9 rounded-xl bg-amber-400 hover:bg-amber-300 text-neutral-950 flex items-center justify-center shrink-0 font-bold shadow"
                               title={active ? 'Pause' : 'Play'}
                             >
                               {active ? (
@@ -517,7 +518,7 @@ export default function LandingPage() {
                 {/* Monthly Artist Leaderboard */}
                 <div className="lg:col-span-4 rounded-2xl p-5 bg-black/40 border border-white/10 space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-neutral-300 flex items-center gap-1.5">
                       <Crown className="w-4 h-4 text-amber-400" />
                       {artistOfTheMonth.month_label} Standings
                     </h4>
@@ -537,8 +538,8 @@ export default function LandingPage() {
                           <span
                             className={`w-6 h-6 rounded-full text-xs font-black flex items-center justify-center shrink-0 ${
                               entry.rank === 1
-                                ? 'bg-amber-400 text-slate-950'
-                                : 'bg-white/10 text-slate-300'
+                                ? 'bg-amber-400 text-neutral-950'
+                                : 'bg-white/10 text-neutral-300'
                             }`}
                           >
                             #{entry.rank}
@@ -553,14 +554,14 @@ export default function LandingPage() {
                               <span>{entry.name}</span>
                               {entry.rank === 1 && <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
                             </div>
-                            <div className="text-[11px] text-slate-400">{entry.primary_genre}</div>
+                            <div className="text-[11px] text-neutral-400">{entry.primary_genre}</div>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
                           <div className="text-sm font-extrabold text-amber-300">
                             {entry.monthly_approved_count} Approved
                           </div>
-                          <div className="text-[10px] text-slate-400">
+                          <div className="text-[10px] text-neutral-400">
                             {entry.monthly_plays} streams
                           </div>
                         </div>
@@ -577,15 +578,15 @@ export default function LandingPage() {
       {/* ====================================================================
           APPROVED SONGS CATALOG SECTION
          ==================================================================== */}
-      <section id="catalog" className="py-16 border-b border-slate-200/70 dark:border-white/10">
+      <section id="catalog" className="py-16 border-b border-white/10/70 dark:border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <span className="text-xs font-extrabold uppercase tracking-widest text-violet-600 dark:text-violet-400">
+              <span className="text-xs font-extrabold uppercase tracking-widest text-amber-500 dark:text-amber-300">
                 Curated & Verified Library
               </span>
               <h2 className="text-3xl font-black mt-1">Approved Songs Catalog</h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              <p className="text-sm text-neutral-300 dark:text-neutral-400 mt-1">
                 Every track below has passed Admin moderation and is simultaneously available via our External REST API.
               </p>
             </div>
@@ -593,20 +594,20 @@ export default function LandingPage() {
             {/* Search & Cover Filter */}
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search songs, artists, musicians..."
-                  className="pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-sm focus:outline-none focus:border-violet-500 w-64 sm:w-72"
+                  className="pl-10 pr-4 py-2.5 rounded-xl bg-[#101013] border border-white/10 dark:border-white/10 text-sm focus:outline-none focus:border-amber-400 w-64 sm:w-72"
                 />
               </div>
 
               <select
                 value={coverFilter}
                 onChange={(e) => setCoverFilter(e.target.value)}
-                className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-sm font-semibold focus:outline-none focus:border-violet-500"
+                className="px-3.5 py-2.5 rounded-xl bg-[#101013] border border-white/10 dark:border-white/10 text-sm font-semibold focus:outline-none focus:border-amber-400"
               >
                 <option value="all">All Songs (Original + Cover)</option>
                 <option value="original">Cover Song: No (Originals)</option>
@@ -623,8 +624,8 @@ export default function LandingPage() {
                 onClick={() => setSelectedGenre(g)}
                 className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                   selectedGenre === g
-                    ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30'
-                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:border-violet-500/40'
+                    ? 'bg-amber-500 text-white'
+                    : 'bg-[#101013] text-neutral-300 dark:text-neutral-300 border border-white/10 dark:border-white/10 hover:border-amber-400/40'
                 }`}
               >
                 {g}
@@ -634,10 +635,10 @@ export default function LandingPage() {
 
           {/* Songs Grid */}
           {filteredSongs.length === 0 ? (
-            <div className="text-center py-14 rounded-3xl bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-white/10">
-              <Music className="w-12 h-12 mx-auto text-slate-400 mb-3" />
+            <div className="text-center py-14 rounded-3xl bg-[#101013]/50 border border-white/10 dark:border-white/10">
+              <Music className="w-12 h-12 mx-auto text-neutral-400 mb-3" />
               <h3 className="text-lg font-bold">No matching approved songs</h3>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-neutral-400 mt-1">
                 Try clearing your search filter or upload a new song from the User Panel.
               </p>
             </div>
@@ -648,9 +649,9 @@ export default function LandingPage() {
                 return (
                   <div
                     key={song.id}
-                    className="group rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-white/10 overflow-hidden shadow-sm hover:shadow-xl hover:border-violet-500/40 transition-all flex flex-col"
+                    className="group rounded-3xl bg-[#101013]/80 border border-white/10/90 dark:border-white/10 overflow-hidden shadow-sm hover:shadow-xl hover:border-amber-400/40 transition-all flex flex-col"
                   >
-                    <div className="relative aspect-[16/10] overflow-hidden bg-slate-950">
+                    <div className="relative aspect-[16/10] overflow-hidden bg-[#070708]">
                       <img
                         src={mediaUrl(song.thumbnail_url)}
                         alt={song.title}
@@ -665,8 +666,8 @@ export default function LandingPage() {
                         <span
                           className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold backdrop-blur-md ${
                             song.is_cover
-                              ? 'bg-amber-500/90 text-slate-950'
-                              : 'bg-emerald-500/85 text-slate-950'
+                              ? 'bg-amber-500/90 text-neutral-950'
+                              : 'bg-emerald-500/85 text-neutral-950'
                           }`}
                         >
                           Cover: {song.is_cover ? 'Yes' : 'No'}
@@ -676,7 +677,7 @@ export default function LandingPage() {
                       {song.video_url && (
                         <button
                           onClick={() => openVideoModal(song)}
-                          className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-violet-600/90 hover:bg-violet-500 text-white text-[11px] font-bold flex items-center gap-1 shadow-lg"
+                          className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-amber-500/90 hover:bg-amber-400 text-white text-[11px] font-bold flex items-center gap-1 shadow-lg"
                         >
                           <Video className="w-3 h-3" />
                           <span>Music Video</span>
@@ -689,7 +690,7 @@ export default function LandingPage() {
                             {song.title}
                           </h3>
                           <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                            <span className="text-xs font-semibold text-slate-200">
+                            <span className="text-xs font-semibold text-neutral-200">
                               {song.artist}
                             </span>
                             {song.is_artist_of_the_month && <ArtistOfMonthBadge size="sm" />}
@@ -698,7 +699,7 @@ export default function LandingPage() {
 
                         <button
                           onClick={() => playSong(song, filteredSongs)}
-                          className="w-11 h-11 rounded-2xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white flex items-center justify-center shrink-0 shadow-lg shadow-violet-600/40 transition-transform active:scale-95"
+                          className="w-11 h-11 rounded-2xl btn-gold flex items-center justify-center shrink-0 transition-transform active:scale-95"
                           title={active ? 'Pause' : 'Play'}
                         >
                           {active ? (
@@ -711,20 +712,20 @@ export default function LandingPage() {
                     </div>
 
                     <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                      <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+                      <div className="space-y-1.5 text-xs text-neutral-300 dark:text-neutral-400">
                         <div className="flex justify-between gap-2">
-                          <span className="font-semibold text-slate-400 dark:text-slate-500">
+                          <span className="font-semibold text-neutral-400 dark:text-neutral-400">
                             Musician:
                           </span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate text-right">
+                          <span className="font-semibold text-neutral-100 dark:text-neutral-200 truncate text-right">
                             {song.musician}
                           </span>
                         </div>
                         <div className="flex justify-between gap-2">
-                          <span className="font-semibold text-slate-400 dark:text-slate-500">
+                          <span className="font-semibold text-neutral-400 dark:text-neutral-400">
                             Composer:
                           </span>
-                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate text-right">
+                          <span className="font-semibold text-neutral-100 dark:text-neutral-200 truncate text-right">
                             {song.composer}
                           </span>
                         </div>
@@ -735,15 +736,15 @@ export default function LandingPage() {
                         )}
                       </div>
 
-                      <div className="pt-3 border-t border-slate-200/70 dark:border-white/10 flex items-center justify-between text-xs">
-                        <span className="text-slate-500 font-mono">
+                      <div className="pt-3 border-t border-white/10/70 dark:border-white/10 flex items-center justify-between text-xs">
+                        <span className="text-neutral-400 font-mono">
                           {song.duration_formatted} • {(song.plays_count || 0).toLocaleString()} plays
                         </span>
                         <div className="flex items-center gap-1.5">
                           {song.video_url && (
                             <button
                               onClick={() => openVideoModal(song)}
-                              className="p-2 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-600 dark:text-violet-300 transition-colors"
+                              className="p-2 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 text-amber-500 dark:text-amber-200 transition-colors"
                               title="Watch Music Video"
                             >
                               <Video className="w-4 h-4" />
@@ -751,7 +752,7 @@ export default function LandingPage() {
                           )}
                           <button
                             onClick={() => downloadMedia(song, 'audio')}
-                            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/15 text-slate-700 dark:text-slate-200 transition-colors"
+                            className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/10 dark:bg-white/[0.05] dark:hover:bg-white/15 text-neutral-200 dark:text-neutral-200 transition-colors"
                             title="Download Audio"
                           >
                             <Download className="w-4 h-4" />
@@ -774,16 +775,16 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-300 text-xs font-extrabold">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-500 dark:text-amber-200 text-xs font-extrabold">
                 <KeyRound className="w-3.5 h-3.5" />
                 <span>External Music Application REST API (v1)</span>
               </div>
               <h2 className="text-3xl font-black mt-2">
                 Connect External Music Apps via API Key
               </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
-                External streaming clients authenticate with <code className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/10 font-mono text-xs">X-API-Key</code> or{' '}
-                <code className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/10 font-mono text-xs">Authorization: Bearer</code> to fetch all approved songs, metadata, cover art, Artist of the Month badges, and direct HTTP Range audio streams.
+              <p className="text-sm text-neutral-300 dark:text-neutral-400 mt-1 max-w-2xl">
+                External streaming clients authenticate with <code className="px-1.5 py-0.5 rounded bg-white/10 dark:bg-white/10 font-mono text-xs">X-API-Key</code> or{' '}
+                <code className="px-1.5 py-0.5 rounded bg-white/10 dark:bg-white/10 font-mono text-xs">Authorization: Bearer</code> to fetch all approved songs, metadata, cover art, Artist of the Month badges, and direct HTTP Range audio streams.
               </p>
             </div>
 
@@ -798,8 +799,8 @@ export default function LandingPage() {
                   onClick={() => setSimTab(t.id)}
                   className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all ${
                     simTab === t.id
-                      ? 'bg-gradient-to-r from-violet-600 to-cyan-500 text-white shadow-lg'
-                      : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300'
+                      ? 'btn-gold shadow-lg'
+                      : 'bg-[#101013] border border-white/10 dark:border-white/10 text-neutral-300 dark:text-neutral-300'
                   }`}
                 >
                   {t.label}
@@ -809,29 +810,29 @@ export default function LandingPage() {
           </div>
 
           {/* API Key Tester Bar */}
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 shadow-xl space-y-4">
+          <div className="p-5 rounded-3xl bg-[#101013]/90 border border-white/10 dark:border-white/10 shadow-xl space-y-4">
             <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
-              <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/10 font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+              <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/[0.04] dark:bg-[#070708] border border-white/10 dark:border-white/10 font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
                 <span>GET</span>
-                <span className="text-slate-700 dark:text-slate-300">/api/v1/songs</span>
+                <span className="text-neutral-200 dark:text-neutral-300">/api/v1/songs</span>
               </div>
 
-              <div className="flex-1 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/10">
-                <KeyRound className="w-4 h-4 text-violet-400 shrink-0" />
-                <span className="text-xs font-bold text-slate-400 shrink-0">X-API-Key:</span>
+              <div className="flex-1 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] dark:bg-[#070708] border border-white/10 dark:border-white/10">
+                <KeyRound className="w-4 h-4 text-amber-300 shrink-0" />
+                <span className="text-xs font-bold text-neutral-400 shrink-0">X-API-Key:</span>
                 <input
                   type="text"
                   value={simApiKey}
                   onChange={(e) => setSimApiKey(e.target.value)}
                   placeholder="Enter API Key (zks_live_...)"
-                  className="w-full bg-transparent text-xs font-mono focus:outline-none text-slate-900 dark:text-white"
+                  className="w-full bg-transparent text-xs font-mono focus:outline-none text-white dark:text-white"
                 />
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(simApiKey);
                     notify('API Key copied to clipboard!', 'info');
                   }}
-                  className="p-1 text-slate-400 hover:text-white"
+                  className="p-1 text-neutral-400 hover:text-white"
                   title="Copy API Key"
                 >
                   <Copy className="w-3.5 h-3.5" />
@@ -843,13 +844,13 @@ export default function LandingPage() {
                 value={simSearch}
                 onChange={(e) => setSimSearch(e.target.value)}
                 placeholder="Optional ?search= query"
-                className="px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-xs focus:outline-none md:w-48"
+                className="px-3.5 py-2.5 rounded-xl bg-white/[0.04] dark:bg-[#070708] border border-white/10 dark:border-white/10 text-xs focus:outline-none md:w-48"
               />
 
               <button
                 onClick={() => fetchExternalApi(simApiKey, simSearch)}
                 disabled={simLoading}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white font-extrabold text-xs flex items-center justify-center gap-2 shrink-0 shadow-md"
+                className="px-5 py-2.5 rounded-xl btn-gold font-extrabold text-xs flex items-center justify-center gap-2 shrink-0 shadow-md"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${simLoading ? 'animate-spin' : ''}`} />
                 <span>Fetch via API Key</span>
@@ -872,7 +873,7 @@ export default function LandingPage() {
               <div className="rounded-2xl bg-[#090d16] text-white border border-emerald-500/30 overflow-hidden shadow-2xl">
                 <div className="px-6 py-4 bg-gradient-to-r from-emerald-950/90 via-slate-900 to-slate-950 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-black">
+                    <div className="w-9 h-9 rounded-full bg-emerald-500 text-neutral-950 flex items-center justify-center font-black">
                       <Disc3 className="w-5 h-5" />
                     </div>
                     <div>
@@ -884,7 +885,7 @@ export default function LandingPage() {
                           Connected via {simResponse.platform?.authenticated_client}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-neutral-400">
                         Powered by {simResponse.platform?.name} REST API • Showing{' '}
                         {simResponse.count} Approved Tracks
                       </p>
@@ -894,7 +895,7 @@ export default function LandingPage() {
                   {simResponse.artist_of_the_month && (
                     <div className="flex items-center gap-2 bg-black/40 px-3.5 py-1.5 rounded-full border border-amber-400/30 text-xs">
                       <Crown className="w-4 h-4 text-amber-400" />
-                      <span className="text-slate-300">API Artist of the Month:</span>
+                      <span className="text-neutral-300">API Artist of the Month:</span>
                       <span className="font-bold text-amber-300">
                         {simResponse.artist_of_the_month.artist_name} (
                         {simResponse.artist_of_the_month.monthly_approved_songs} approved)
@@ -906,7 +907,7 @@ export default function LandingPage() {
                 <div className="p-4 sm:p-6 overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs sm:text-sm">
                     <thead>
-                      <tr className="border-b border-white/10 text-[11px] uppercase tracking-wider text-slate-400">
+                      <tr className="border-b border-white/10 text-[11px] uppercase tracking-wider text-neutral-400">
                         <th className="py-2.5 px-3">#</th>
                         <th className="py-2.5 px-3">Title & Cover</th>
                         <th className="py-2.5 px-3">Artist & Badge</th>
@@ -920,7 +921,7 @@ export default function LandingPage() {
                         const playingThis = currentSong?.id === s.id && isPlaying;
                         return (
                           <tr key={s.id} className="hover:bg-white/5 transition-colors">
-                            <td className="py-3 px-3 font-mono text-slate-400">{idx + 1}</td>
+                            <td className="py-3 px-3 font-mono text-neutral-400">{idx + 1}</td>
                             <td className="py-3 px-3">
                               <div className="flex items-center gap-3">
                                 <img
@@ -930,7 +931,7 @@ export default function LandingPage() {
                                 />
                                 <div>
                                   <div className="font-bold text-white">{s.title}</div>
-                                  <div className="text-xs text-slate-400">
+                                  <div className="text-xs text-neutral-400">
                                     {s.genre} • {s.duration_formatted}
                                   </div>
                                 </div>
@@ -938,11 +939,11 @@ export default function LandingPage() {
                             </td>
                             <td className="py-3 px-3">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-semibold text-slate-200">{s.artist}</span>
+                                <span className="font-semibold text-neutral-200">{s.artist}</span>
                                 {s.is_artist_of_the_month && <ArtistOfMonthBadge size="sm" />}
                               </div>
                             </td>
-                            <td className="py-3 px-3 hidden md:table-cell text-xs text-slate-400">
+                            <td className="py-3 px-3 hidden md:table-cell text-xs text-neutral-400">
                               <div>Musician: {s.musician}</div>
                               <div>Composer: {s.composer}</div>
                             </td>
@@ -970,7 +971,7 @@ export default function LandingPage() {
                                     publicSongs
                                   )
                                 }
-                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition-all"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-extrabold text-xs transition-all"
                               >
                                 {playingThis ? (
                                   <>
@@ -991,12 +992,12 @@ export default function LandingPage() {
                 </div>
               </div>
             ) : simTab === 'raw_json' ? (
-              <div className="rounded-2xl bg-slate-950 p-4 border border-white/10 font-mono text-xs text-emerald-300 max-h-96 overflow-auto">
+              <div className="rounded-2xl bg-[#070708] p-4 border border-white/10 font-mono text-xs text-emerald-300 max-h-96 overflow-auto">
                 <pre>{JSON.stringify(simResponse, null, 2)}</pre>
               </div>
             ) : (
-              <div className="rounded-2xl bg-slate-950 p-5 border border-white/10 font-mono text-xs text-cyan-300 space-y-3 overflow-x-auto">
-                <div className="text-slate-400 font-sans font-bold">
+              <div className="rounded-2xl bg-[#070708] p-5 border border-white/10 font-mono text-xs text-amber-200 space-y-3 overflow-x-auto">
+                <div className="text-neutral-400 font-sans font-bold">
                   Example JavaScript Fetch for External Music Clients (Mobile / Web):
                 </div>
                 <pre className="text-emerald-300">{`const response = await fetch('${window.location.origin}/api/v1/songs', {
@@ -1006,7 +1007,7 @@ export default function LandingPage() {
     'Accept': 'application/json'
   }
 });
-const { songs, artist_of_the_month } = await response.json();
+const { songs, artist_of_the_month } = await readJson(response);
 // Each song includes: title, artist, musician, composer, cover_song ("Yes"/"No"),
 // thumbnail_url, audio_url, stream_url, video_url, and is_artist_of_the_month badge!`}</pre>
               </div>
@@ -1016,37 +1017,37 @@ const { songs, artist_of_the_month } = await response.json();
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-white/10 py-10 mt-8">
+      <footer className="border-t border-white/10 dark:border-white/10 py-10 mt-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-400 dark:text-neutral-400">
             <div className="flex items-center gap-3">
               <img
                 src={mediaUrl(settings.logo_url) || '/zk-logo.svg'}
                 alt={settings.site_name}
                 className="w-7 h-7 rounded-lg"
               />
-              <span className="font-bold text-slate-800 dark:text-slate-200">
+              <span className="font-bold text-neutral-100 dark:text-neutral-200">
                 {settings.site_name}
               </span>
               <span>— {settings.footer_text}</span>
             </div>
             <div className="flex items-center gap-4">
               <span>Contact: {settings.contact_email}</span>
-              <Link to="/login" className="hover:text-violet-400 font-semibold">
+              <Link to="/login" className="hover:text-amber-300 font-semibold">
                 Login
               </Link>
-              <Link to="/register" className="hover:text-violet-400 font-semibold">
+              <Link to="/register" className="hover:text-amber-300 font-semibold">
                 Register
               </Link>
             </div>
           </div>
 
           {/* Studio credit */}
-          <div className="pt-5 border-t border-slate-200/70 dark:border-white/5 text-center sm:text-left">
-            <p className="text-[11px] sm:text-xs font-extrabold tracking-[0.18em] uppercase text-slate-700 dark:text-slate-200">
+          <div className="pt-5 border-t border-white/10/70 dark:border-white/5 text-center sm:text-left">
+            <p className="text-[11px] sm:text-xs font-extrabold tracking-[0.18em] uppercase text-neutral-200 dark:text-neutral-200">
               Website by ZK Studio
             </p>
-            <p className="mt-1.5 text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <p className="mt-1.5 text-[11px] sm:text-xs font-semibold text-neutral-400 dark:text-neutral-400">
               CEO &amp; MD — Ziyan Hossain
             </p>
           </div>

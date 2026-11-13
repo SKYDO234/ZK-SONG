@@ -58,6 +58,7 @@ import {
   synthesizeBrowserWavFile,
   generateBrowserCoverFile,
 } from '../../components/browserMediaSynth';
+import { readJson } from '../../lib/http';
 
 const GENRES = [
   'Synthwave',
@@ -87,7 +88,7 @@ export function UserDashboard() {
     setError('');
     try {
       const res = await authFetch('/api/user/dashboard');
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Failed to load dashboard');
       setData(json);
     } catch (err) {
@@ -115,7 +116,7 @@ export function UserDashboard() {
       actions={
         <button
           onClick={load}
-          className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+          className="p-2.5 rounded-xl border border-white/10 dark:border-white/10 hover:bg-white/[0.06] dark:hover:bg-white/10 transition-colors"
           aria-label="Refresh dashboard"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -171,7 +172,7 @@ export function UserDashboard() {
             className={`relative overflow-hidden rounded-2xl border p-5 sm:p-6 ${
               isWinner
                 ? 'border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-amber-400/5 to-transparent'
-                : 'border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/70'
+                : 'border-white/10 dark:border-white/10 bg-[#101013]/70'
             }`}
           >
             <div className="pointer-events-none absolute -top-16 -right-10 w-56 h-56 rounded-full bg-amber-400/20 blur-3xl" />
@@ -188,10 +189,10 @@ export function UserDashboard() {
                       ? `${aotm.winner.name} is leading the crown`
                       : 'No crowned artist yet'}
                 </h3>
-                <p className="mt-1.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed">
+                <p className="mt-1.5 text-xs sm:text-sm text-neutral-400 dark:text-neutral-400 max-w-lg leading-relaxed">
                   The crown is awarded automatically to the artist with the highest number of
                   approved songs this month. Your approved tracks this month:{' '}
-                  <span className="font-extrabold text-slate-900 dark:text-white">
+                  <span className="font-extrabold text-white dark:text-white">
                     {stats.monthly_approved ?? 0}
                   </span>
                   {myRank > 0 ? ` • Current rank #${myRank}` : ''}.
@@ -214,19 +215,19 @@ export function UserDashboard() {
                     key={artist.user_id}
                     className={`flex items-center gap-3 p-2.5 rounded-xl border ${
                       isMe
-                        ? 'border-violet-500/40 bg-violet-500/10'
-                        : 'border-transparent bg-slate-100/70 dark:bg-white/5'
+                        ? 'border-amber-400/40 bg-amber-400/10'
+                        : 'border-transparent bg-white/[0.04]/70 dark:bg-white/[0.05]'
                     }`}
                   >
                     <span
                       className={`w-6 h-6 rounded-lg grid place-items-center text-[11px] font-black shrink-0 ${
                         idx === 0
-                          ? 'bg-amber-400 text-slate-950'
+                          ? 'bg-amber-400 text-neutral-950'
                           : idx === 1
-                            ? 'bg-slate-300 text-slate-900'
+                            ? 'bg-slate-300 text-white'
                             : idx === 2
-                              ? 'bg-orange-400/80 text-slate-950'
-                              : 'bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-slate-300'
+                              ? 'bg-orange-400/80 text-neutral-950'
+                              : 'bg-white/10 dark:bg-white/10 text-neutral-300 dark:text-neutral-300'
                       }`}
                     >
                       {idx + 1}
@@ -237,17 +238,17 @@ export function UserDashboard() {
                       className="w-7 h-7 rounded-lg object-cover border border-white/20 shrink-0"
                     />
                     <span className="flex-1 min-w-0 text-xs font-extrabold truncate">
-                      {artist.name} {isMe && <span className="text-violet-500">(You)</span>}
+                      {artist.name} {isMe && <span className="text-amber-400">(You)</span>}
                     </span>
                     {idx === 0 && <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
-                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
+                    <span className="text-[11px] font-bold text-neutral-400 dark:text-neutral-400 shrink-0">
                       {artist.monthly_approved_count} approved
                     </span>
                   </div>
                 );
               })}
               {leaderboard.length === 0 && !loading && (
-                <p className="text-xs text-slate-500">Leaderboard will appear once songs are approved.</p>
+                <p className="text-xs text-neutral-400">Leaderboard will appear once songs are approved.</p>
               )}
             </div>
           </div>
@@ -259,7 +260,7 @@ export function UserDashboard() {
             action={
               <Link
                 to="/user/songs"
-                className="text-xs font-extrabold text-violet-600 dark:text-violet-400 hover:underline"
+                className="text-xs font-extrabold text-amber-500 dark:text-amber-300 hover:underline"
               >
                 View all →
               </Link>
@@ -283,13 +284,13 @@ export function UserDashboard() {
                 }
               />
             ) : (
-              <ul className="divide-y divide-slate-100 dark:divide-white/5">
+              <ul className="divide-y divide-white/[0.06] dark:divide-white/5">
                 {data.recent_songs.map((song) => {
                   const active = currentSong?.id === song.id && isPlaying;
                   return (
                     <li
                       key={song.id}
-                      className="flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                      className="flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-white/[0.04] dark:hover:bg-white/5 transition-colors"
                     >
                       <button
                         onClick={() => playSong(song, data.recent_songs)}
@@ -316,7 +317,7 @@ export function UserDashboard() {
                             <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                           )}
                         </p>
-                        <p className="text-[11px] text-slate-500 truncate">
+                        <p className="text-[11px] text-neutral-400 truncate">
                           {song.genre} • {song.duration_formatted || formatDuration(song.duration)}
                           {song.has_video ? ' • Music Video' : ''}
                         </p>
@@ -335,19 +336,19 @@ export function UserDashboard() {
           <SectionCard title="Studio Snapshot">
             <div className="p-4 space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-slate-500 dark:text-slate-400 font-semibold">
+                <span className="flex items-center gap-2 text-neutral-400 dark:text-neutral-400 font-semibold">
                   <Headphones className="w-4 h-4" /> Total Plays
                 </span>
                 <span className="font-black">{formatNumber(stats.total_plays)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-slate-500 dark:text-slate-400 font-semibold">
+                <span className="flex items-center gap-2 text-neutral-400 dark:text-neutral-400 font-semibold">
                   <Download className="w-4 h-4" /> Downloads
                 </span>
                 <span className="font-black">{formatNumber(stats.total_downloads)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-slate-500 dark:text-slate-400 font-semibold">
+                <span className="flex items-center gap-2 text-neutral-400 dark:text-neutral-400 font-semibold">
                   <TrendingUp className="w-4 h-4" /> Approval Rate
                 </span>
                 <span className="font-black">
@@ -356,7 +357,7 @@ export function UserDashboard() {
                     : '—'}
                 </span>
               </div>
-              <div className="pt-3 border-t border-slate-200 dark:border-white/10">
+              <div className="pt-3 border-t border-white/10 dark:border-white/10">
                 <Link to="/user/upload" className={`${primaryBtn} w-full`}>
                   <UploadCloud className="w-4 h-4" /> Upload New Song
                 </Link>
@@ -365,20 +366,20 @@ export function UserDashboard() {
           </SectionCard>
 
           <SectionCard title="Notifications" subtitle="Latest moderation updates">
-            <div className="max-h-[360px] overflow-y-auto divide-y divide-slate-100 dark:divide-white/5">
+            <div className="max-h-[360px] overflow-y-auto divide-y divide-white/[0.06] dark:divide-white/5">
               {loading &&
                 [1, 2, 3].map((i) => <div key={i} className="m-3 h-14 rounded-lg skeleton" />)}
               {!loading && (data?.notifications || []).length === 0 && (
-                <p className="p-6 text-center text-xs text-slate-500">No notifications yet.</p>
+                <p className="p-6 text-center text-xs text-neutral-400">No notifications yet.</p>
               )}
               {!loading &&
                 (data?.notifications || []).map((n) => (
                   <div key={n.id} className="px-4 py-3">
                     <p className="text-xs font-extrabold">{n.title}</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-[11px] text-neutral-400 dark:text-neutral-400 mt-1 leading-relaxed">
                       {n.message}
                     </p>
-                    <p className="text-[10px] text-slate-400 mt-1.5">{formatDate(n.created_at, true)}</p>
+                    <p className="text-[10px] text-neutral-400 mt-1.5">{formatDate(n.created_at, true)}</p>
                   </div>
                 ))}
             </div>
@@ -422,7 +423,7 @@ export function MySongs() {
         limit: '8',
       });
       const res = await authFetch(`/api/user/songs?${qs.toString()}`);
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Failed to load songs');
       setSongs(json.songs || []);
       setStats(json.stats || {});
@@ -469,7 +470,7 @@ export function MySongs() {
         method: 'PUT',
         body: JSON.stringify(editForm),
       });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Update failed');
       notify(json.message, 'success');
       setEditing(null);
@@ -485,7 +486,7 @@ export function MySongs() {
     setDeleteLoading(true);
     try {
       const res = await authFetch(`/api/user/songs/${deleting.id}`, { method: 'DELETE' });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Delete failed');
       notify(json.message, 'success');
       setDeleting(null);
@@ -522,14 +523,14 @@ export function MySongs() {
             onClick={() => setStatusFilter(t.key)}
             className={`px-3.5 py-2 rounded-xl text-xs font-extrabold border transition-all ${
               statusFilter === t.key
-                ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-600/25'
-                : 'border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5'
+                ? 'bg-amber-500 text-white border-amber-500'
+                : 'border-white/10 dark:border-white/10 hover:bg-white/[0.06] dark:hover:bg-white/5'
             }`}
           >
             {t.label}
             <span
               className={`ml-1.5 px-1.5 py-0.5 rounded-md text-[10px] ${
-                statusFilter === t.key ? 'bg-white/20' : 'bg-slate-200 dark:bg-white/10'
+                statusFilter === t.key ? 'bg-white/20' : 'bg-white/10 dark:bg-white/10'
               }`}
             >
               {t.count ?? 0}
@@ -547,7 +548,7 @@ export function MySongs() {
             <select
               value={coverFilter}
               onChange={(e) => setCoverFilter(e.target.value)}
-              className="px-2.5 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-xs font-bold"
+              className="px-2.5 py-2 rounded-lg bg-[#0a0a0b] dark:bg-[#070708] border border-white/10 dark:border-white/10 text-xs font-bold"
             >
               <option value="all">All Types</option>
               <option value="no">Originals</option>
@@ -556,9 +557,9 @@ export function MySongs() {
           </div>
         }
       >
-        <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10">
+        <div className="px-4 py-3 border-b border-white/10 dark:border-white/10">
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -586,11 +587,11 @@ export function MySongs() {
             }
           />
         ) : (
-          <ul className="divide-y divide-slate-100 dark:divide-white/5">
+          <ul className="divide-y divide-white/[0.06] dark:divide-white/5">
             {songs.map((song) => {
               const active = currentSong?.id === song.id && isPlaying;
               return (
-                <li key={song.id} className="p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                <li key={song.id} className="p-3 sm:p-4 hover:bg-white/[0.04] dark:hover:bg-white/5 transition-colors">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     <button
                       onClick={() => playSong(song, songs)}
@@ -616,21 +617,21 @@ export function MySongs() {
                             COVER
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30 text-[10px] font-extrabold">
+                          <span className="px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-500 dark:text-amber-200 border border-amber-400/30 text-[10px] font-extrabold">
                             ORIGINAL
                           </span>
                         )}
                         {song.has_video && (
-                          <span className="px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-600 dark:text-violet-300 border border-violet-500/30 text-[10px] font-extrabold inline-flex items-center gap-1">
+                          <span className="px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-500 dark:text-amber-200 border border-amber-400/30 text-[10px] font-extrabold inline-flex items-center gap-1">
                             <Video className="w-2.5 h-2.5" /> VIDEO
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-1 truncate">
+                      <p className="text-[11px] text-neutral-400 mt-1 truncate">
                         {song.artist} • {song.genre} • {song.duration_formatted} •{' '}
                         {formatNumber(song.plays_count)} plays
                       </p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-neutral-400 mt-0.5">
                         Uploaded {formatDate(song.created_at)}
                         {song.status === 'approved' && song.approved_at
                           ? ` • Approved ${formatDate(song.approved_at)}`
@@ -642,7 +643,7 @@ export function MySongs() {
                       {song.has_video && (
                         <button
                           onClick={() => openVideoModal(song)}
-                          className="p-2 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-violet-500/10 hover:text-violet-500 transition-colors"
+                          className="p-2 rounded-lg border border-white/10 dark:border-white/10 hover:bg-amber-400/10 hover:text-amber-400 transition-colors"
                           title="Play music video"
                         >
                           <Video className="w-4 h-4" />
@@ -650,14 +651,14 @@ export function MySongs() {
                       )}
                       <button
                         onClick={() => downloadMedia(song, 'audio')}
-                        className="p-2 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-cyan-500/10 hover:text-cyan-500 transition-colors"
+                        className="p-2 rounded-lg border border-white/10 dark:border-white/10 hover:bg-amber-400/10 hover:text-amber-400 transition-colors"
                         title="Download audio"
                       >
                         <Download className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => openEdit(song)}
-                        className="p-2 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors"
+                        className="p-2 rounded-lg border border-white/10 dark:border-white/10 hover:bg-white/10/60 dark:hover:bg-white/10 transition-colors"
                         title="Edit details"
                       >
                         <Pencil className="w-4 h-4" />
@@ -795,9 +796,9 @@ export function MySongs() {
                   className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold border transition-all ${
                     editForm.is_cover === v
                       ? v === 'yes'
-                        ? 'bg-amber-500 text-slate-950 border-amber-500'
-                        : 'bg-cyan-500 text-slate-950 border-cyan-500'
-                      : 'border-slate-200 dark:border-white/10'
+                        ? 'bg-amber-500 text-neutral-950 border-amber-500'
+                        : 'bg-amber-400 text-neutral-950 border-amber-400'
+                      : 'border-white/10 dark:border-white/10'
                   }`}
                 >
                   {v === 'yes' ? 'Yes — Cover Song' : 'No — Original'}
@@ -1027,7 +1028,7 @@ export function UploadSong() {
             },
             body: JSON.stringify({ ...meta, ...sent }),
           })
-            .then(async (r) => resolve({ ok: r.ok, json: await r.json().catch(() => ({})) }))
+            .then(async (r) => resolve({ ok: r.ok, json: await readJson(r).catch(() => ({})) }))
             .catch(reject);
           return;
         }
@@ -1184,14 +1185,14 @@ export function UploadSong() {
                     onClick={() => setForm({ ...form, is_cover: 'no' })}
                     className={`p-3 rounded-xl border text-left transition-all ${
                       form.is_cover === 'no'
-                        ? 'border-cyan-500 bg-cyan-500/10 ring-1 ring-cyan-500/40'
-                        : 'border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5'
+                        ? 'border-amber-400 bg-amber-400/10 ring-1 ring-amber-400/40'
+                        : 'border-white/10 dark:border-white/10 hover:bg-white/[0.04] dark:hover:bg-white/5'
                     }`}
                   >
                     <span className="flex items-center gap-2 text-xs font-extrabold">
-                      <Disc3 className="w-4 h-4 text-cyan-500" /> Original Song
+                      <Disc3 className="w-4 h-4 text-amber-400" /> Original Song
                     </span>
-                    <span className="block text-[11px] text-slate-500 mt-1">
+                    <span className="block text-[11px] text-neutral-400 mt-1">
                       Fully original composition
                     </span>
                   </button>
@@ -1201,13 +1202,13 @@ export function UploadSong() {
                     className={`p-3 rounded-xl border text-left transition-all ${
                       form.is_cover === 'yes'
                         ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/40'
-                        : 'border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5'
+                        : 'border-white/10 dark:border-white/10 hover:bg-white/[0.04] dark:hover:bg-white/5'
                     }`}
                   >
                     <span className="flex items-center gap-2 text-xs font-extrabold">
                       <Music4 className="w-4 h-4 text-amber-500" /> Cover Song — Yes
                     </span>
-                    <span className="block text-[11px] text-slate-500 mt-1">
+                    <span className="block text-[11px] text-neutral-400 mt-1">
                       Reinterpretation of an existing work
                     </span>
                   </button>
@@ -1257,7 +1258,7 @@ export function UploadSong() {
             title="Audio File *"
             subtitle="MP3, WAV, OGG, FLAC, M4A or AAC — up to 120MB"
             action={
-              <button type="button" onClick={generateAudio} className="text-[11px] font-extrabold text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1">
+              <button type="button" onClick={generateAudio} className="text-[11px] font-extrabold text-amber-500 dark:text-amber-300 hover:underline inline-flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> Generate test WAV
               </button>
             }
@@ -1270,14 +1271,14 @@ export function UploadSong() {
                       ? 'border-rose-500/60 bg-rose-500/5'
                       : audioFile
                         ? 'border-emerald-500/50 bg-emerald-500/5'
-                        : 'border-slate-300 dark:border-white/15 hover:border-violet-500/60'
+                        : 'border-white/15 dark:border-white/15 hover:border-amber-400/60'
                   }`}
                 >
-                  <UploadCloud className="w-8 h-8 mx-auto text-slate-400" />
+                  <UploadCloud className="w-8 h-8 mx-auto text-neutral-400" />
                   <p className="mt-2 text-sm font-extrabold">
                     {audioFile ? audioFile.name : 'Click to select audio file'}
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-neutral-400 mt-0.5">
                     {audioFile
                       ? `${(audioFile.size / (1024 * 1024)).toFixed(2)} MB • ${durationSec || '—'}s`
                       : 'Drag & drop or browser generated WAV'}
@@ -1301,7 +1302,7 @@ export function UploadSong() {
             title="Thumbnail / Cover Image *"
             subtitle="Square artwork recommended (600×600)"
             action={
-              <button type="button" onClick={generateCover} className="text-[11px] font-extrabold text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1">
+              <button type="button" onClick={generateCover} className="text-[11px] font-extrabold text-amber-500 dark:text-amber-300 hover:underline inline-flex items-center gap-1">
                 <Sparkles className="w-3 h-3" /> Generate cover
               </button>
             }
@@ -1314,13 +1315,13 @@ export function UploadSong() {
                       ? 'border-rose-500/60 bg-rose-500/5'
                       : thumbPreview
                         ? 'border-emerald-500/50'
-                        : 'border-slate-300 dark:border-white/15'
+                        : 'border-white/15 dark:border-white/15'
                   }`}
                 >
                   {thumbPreview ? (
                     <img src={thumbPreview} alt="Cover preview" className="w-full h-full object-cover" />
                   ) : (
-                    <Camera className="w-7 h-7 text-slate-400" />
+                    <Camera className="w-7 h-7 text-neutral-400" />
                   )}
                 </div>
                 <input
@@ -1334,7 +1335,7 @@ export function UploadSong() {
                 <p className="text-sm font-extrabold">
                   {thumbFile ? thumbFile.name : 'No cover selected'}
                 </p>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
+                <p className="text-[11px] text-neutral-400 leading-relaxed">
                   PNG, JPG, WEBP, SVG or GIF. This artwork appears across the public catalogue,
                   the streaming player, and the external REST API responses.
                 </p>
@@ -1353,14 +1354,14 @@ export function UploadSong() {
                   className={`rounded-2xl border-2 border-dashed p-5 text-center transition-colors ${
                     videoFile
                       ? 'border-emerald-500/50 bg-emerald-500/5'
-                      : 'border-slate-300 dark:border-white/15 hover:border-violet-500/60'
+                      : 'border-white/15 dark:border-white/15 hover:border-amber-400/60'
                   }`}
                 >
-                  <Video className="w-7 h-7 mx-auto text-slate-400" />
+                  <Video className="w-7 h-7 mx-auto text-neutral-400" />
                   <p className="mt-2 text-sm font-extrabold">
                     {videoFile ? videoFile.name : 'Click to attach a music video'}
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-neutral-400 mt-0.5">
                     {videoFile ? `${(videoFile.size / (1024 * 1024)).toFixed(2)} MB` : 'Optional'}
                   </p>
                 </div>
@@ -1389,33 +1390,33 @@ export function UploadSong() {
           <SectionCard title="Upload Summary">
             <div className="p-4 space-y-3 text-xs">
               <div className="flex justify-between gap-3">
-                <span className="text-slate-500 font-semibold">Title</span>
+                <span className="text-neutral-400 font-semibold">Title</span>
                 <span className="font-extrabold text-right truncate">{form.title || '—'}</span>
               </div>
               <div className="flex justify-between gap-3">
-                <span className="text-slate-500 font-semibold">Artist</span>
+                <span className="text-neutral-400 font-semibold">Artist</span>
                 <span className="font-extrabold text-right truncate">{form.artist || '—'}</span>
               </div>
               <div className="flex justify-between gap-3">
-                <span className="text-slate-500 font-semibold">Type</span>
+                <span className="text-neutral-400 font-semibold">Type</span>
                 <span className="font-extrabold">{form.is_cover === 'yes' ? 'Cover Song' : 'Original'}</span>
               </div>
               <div className="flex justify-between gap-3">
-                <span className="text-slate-500 font-semibold">Genre</span>
+                <span className="text-neutral-400 font-semibold">Genre</span>
                 <span className="font-extrabold">{form.genre}</span>
               </div>
               <div className="flex justify-between gap-3">
-                <span className="text-slate-500 font-semibold">Audio</span>
+                <span className="text-neutral-400 font-semibold">Audio</span>
                 <span className="font-extrabold truncate">
                   {audioFile ? 'Ready' : 'Missing'}
                 </span>
               </div>
               <div className="flex justify-between gap-3">
-                <span className="text-slate-500 font-semibold">Cover</span>
+                <span className="text-neutral-400 font-semibold">Cover</span>
                 <span className="font-extrabold">{thumbFile ? 'Ready' : 'Missing'}</span>
               </div>
               <div className="flex justify-between gap-3">
-                <span className="text-slate-500 font-semibold">Music Video</span>
+                <span className="text-neutral-400 font-semibold">Music Video</span>
                 <span className="font-extrabold">{videoFile ? 'Attached' : 'None'}</span>
               </div>
 
@@ -1425,9 +1426,9 @@ export function UploadSong() {
                     <span>Uploading…</span>
                     <span>{progress}%</span>
                   </div>
-                  <div className="h-2 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
+                  <div className="h-2 rounded-full bg-white/10 dark:bg-white/10 overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-violet-600 to-cyan-500 transition-all duration-300"
+                      className="h-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-300"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
@@ -1444,7 +1445,7 @@ export function UploadSong() {
             <p className="flex items-center gap-1.5 text-xs font-extrabold text-amber-700 dark:text-amber-300">
               <AlertTriangle className="w-3.5 h-3.5" /> Moderation Notice
             </p>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">
+            <p className="text-[11px] text-neutral-300 dark:text-neutral-400 mt-1.5 leading-relaxed">
               Every submission is reviewed by the A&R admin team. Approved tracks appear instantly
               in the public catalogue and external REST API. Rejected tracks are permanently removed
               from the platform and storage.
@@ -1504,7 +1505,7 @@ export function AccountManagement() {
           Object.entries(profile).forEach(([k, v]) => fd.append(k, v ?? ''));
           fd.append('avatar', avatarFile);
           const res = await authFetch('/api/user/account', { method: 'PUT', body: fd });
-          const json = await res.json();
+          const json = await readJson(res);
           if (!res.ok) throw new Error(json.error || 'Update failed');
           setUser(json.user);
           setAvatarFile(null);
@@ -1518,7 +1519,7 @@ export function AccountManagement() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...profile, ...(avatarKey ? { avatar_key: avatarKey } : {}) }),
       });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Update failed');
       setUser(json.user);
       setAvatarFile(null);
@@ -1546,7 +1547,7 @@ export function AccountManagement() {
           new_password: passwords.new_password,
         }),
       });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Password change failed');
       notify(json.message, 'success');
       setPasswords({ current_password: '', new_password: '', confirm: '' });
@@ -1574,7 +1575,7 @@ export function AccountManagement() {
                   <img
                     src={avatarPreview || monogramAvatar(user?.name, user?.id)}
                     alt="Avatar"
-                    className="w-20 h-20 rounded-2xl object-cover border border-slate-200 dark:border-white/15"
+                    className="w-20 h-20 rounded-2xl object-cover border border-white/10 dark:border-white/15"
                   />
                   <span className="absolute inset-0 rounded-2xl bg-black/50 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Camera className="w-5 h-5 text-white" />
@@ -1597,9 +1598,9 @@ export function AccountManagement() {
                 </label>
                 <div className="text-center sm:text-left">
                   <p className="font-extrabold text-sm">{user?.name}</p>
-                  <p className="text-xs text-slate-500">{user?.email}</p>
+                  <p className="text-xs text-neutral-400">{user?.email}</p>
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
-                    <span className="px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-600 dark:text-violet-300 border border-violet-500/30 text-[10px] font-extrabold uppercase">
+                    <span className="px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-500 dark:text-amber-200 border border-amber-400/30 text-[10px] font-extrabold uppercase">
                       {user?.role}
                     </span>
                     <span
@@ -1615,7 +1616,7 @@ export function AccountManagement() {
                       <ArtistOfMonthBadge size="xs" monthLabel={user.artist_of_month_badge?.month} />
                     )}
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-2">
+                  <p className="text-[11px] text-neutral-400 mt-2">
                     Member since {formatDate(user?.created_at)}
                   </p>
                 </div>
@@ -1773,18 +1774,18 @@ export function AccountManagement() {
                 { label: 'Downloads', value: formatNumber(stats.total_downloads) },
               ].map((row) => (
                 <div key={row.label} className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500 dark:text-slate-400 font-semibold">{row.label}</span>
+                  <span className="text-neutral-400 dark:text-neutral-400 font-semibold">{row.label}</span>
                   <span className="font-black">{row.value}</span>
                 </div>
               ))}
             </div>
           </SectionCard>
 
-          <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/70 p-4">
+          <div className="rounded-2xl border border-white/10 dark:border-white/10 bg-[#101013]/70 p-4">
             <p className="flex items-center gap-1.5 text-xs font-extrabold">
-              <Calendar className="w-3.5 h-3.5 text-violet-500" /> Monthly Crown Race
+              <Calendar className="w-3.5 h-3.5 text-amber-400" /> Monthly Crown Race
             </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+            <p className="text-[11px] text-neutral-400 dark:text-neutral-400 mt-1.5 leading-relaxed">
               Approved songs are counted automatically per calendar month. The artist with the most
               approved releases receives the Artist of the Month badge across the entire platform.
             </p>

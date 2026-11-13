@@ -15,6 +15,7 @@
 // ============================================================================
 
 import { withApiBase } from './apiBase';
+import { readJson } from './http';
 
 /**
  * Ask the API how uploads should be performed.
@@ -25,9 +26,9 @@ let capabilityPromise = null;
 export function getUploadCapability(force = false) {
   if (!capabilityPromise || force) {
     capabilityPromise = fetch(withApiBase('/api/uploads/config'))
-      .then((res) => (res.ok ? res.json() : null))
+      .then(async (res) => (res.ok ? readJson(res, null) : null))
       .then((json) =>
-        json
+        json && typeof json === 'object'
           ? { direct: Boolean(json.direct_upload), maxMb: json.max_upload_mb || 120 }
           : { direct: false, maxMb: 120 }
       )
@@ -82,7 +83,7 @@ export async function uploadAsset({ authFetch, file, field, onProgress }) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ field, filename: file.name, size: file.size }),
   });
-  const signJson = await signRes.json().catch(() => ({}));
+  const signJson = await readJson(signRes, {});
   if (!signRes.ok) {
     throw new Error(signJson.error || 'Could not prepare the upload.');
   }

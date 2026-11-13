@@ -34,6 +34,7 @@ import {
   ghostBtn,
   EmptyState,
 } from '../../components/Common';
+import { readJson } from '../../lib/http';
 
 const ENDPOINTS = [
   { method: 'GET', path: '/api/v1/songs', desc: 'List all approved songs with full metadata, thumbnail and audio URLs.' },
@@ -69,7 +70,7 @@ export default function ApiKeyManagement() {
     setLoading(true);
     try {
       const res = await authFetch('/api/admin/api-keys');
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Failed to load API keys');
       setKeys(json.api_keys || []);
     } catch (err) {
@@ -99,7 +100,7 @@ export default function ApiKeyManagement() {
         method: 'POST',
         body: JSON.stringify({ name: newKeyName, permissions: newPermissions }),
       });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Failed to generate key');
       setCreatedKey(json.api_key);
       notify(json.message, 'success');
@@ -117,7 +118,7 @@ export default function ApiKeyManagement() {
     setBusyId(k.id);
     try {
       const res = await authFetch(`/api/admin/api-keys/${k.id}/toggle`, { method: 'PUT' });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Toggle failed');
       notify(json.message, 'success');
       load();
@@ -132,7 +133,7 @@ export default function ApiKeyManagement() {
     setDeleting(true);
     try {
       const res = await authFetch(`/api/admin/api-keys/${deleteTarget.id}`, { method: 'DELETE' });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Delete failed');
       notify(json.message, 'success');
       setDeleteTarget(null);
@@ -235,7 +236,7 @@ export default function ApiKeyManagement() {
                       key={k.id}
                       className={`rounded-2xl border p-3.5 ${
                         k.status === 'active'
-                          ? 'border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/60'
+                          ? 'border-white/10 dark:border-white/10 bg-[#101013]/60'
                           : 'border-rose-500/25 bg-rose-500/5'
                       }`}
                     >
@@ -253,7 +254,7 @@ export default function ApiKeyManagement() {
                               {k.status}
                             </span>
                           </p>
-                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">ID #{k.id}</p>
+                          <p className="text-[10px] text-neutral-400 font-mono mt-0.5">ID #{k.id}</p>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <button
@@ -277,20 +278,20 @@ export default function ApiKeyManagement() {
                         </div>
                       </div>
 
-                      <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/10 px-3 py-2">
-                        <Code2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-white/[0.04] dark:bg-[#070708] border border-white/10 dark:border-white/10 px-3 py-2">
+                        <Code2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
                         <code className="text-[11px] font-mono font-bold flex-1 truncate">
                           {isRevealed ? k.api_key : `${k.api_key.slice(0, 12)}${'•'.repeat(18)}${k.api_key.slice(-4)}`}
                         </code>
-                        <button onClick={() => setRevealed({ ...revealed, [k.id]: !isRevealed })} className="p-1 text-slate-400 hover:text-violet-500" title={isRevealed ? 'Hide key' : 'Reveal key'}>
+                        <button onClick={() => setRevealed({ ...revealed, [k.id]: !isRevealed })} className="p-1 text-neutral-400 hover:text-amber-400" title={isRevealed ? 'Hide key' : 'Reveal key'}>
                           {isRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                         </button>
-                        <button onClick={() => copy(k.api_key, 'API key')} className="p-1 text-slate-400 hover:text-violet-500" title="Copy key">
+                        <button onClick={() => copy(k.api_key, 'API key')} className="p-1 text-neutral-400 hover:text-amber-400" title="Copy key">
                           <Copy className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[10px] text-slate-500">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[10px] text-neutral-400">
                         <span className="inline-flex items-center gap-1"><Layers className="w-3 h-3" /> {k.permissions}</span>
                         <span className="inline-flex items-center gap-1"><Activity className="w-3 h-3" /> {formatNumber(k.requests_count)} requests</span>
                         <span className="inline-flex items-center gap-1"><Clock3 className="w-3 h-3" /> Created {formatDate(k.created_at)}</span>
@@ -338,35 +339,35 @@ export default function ApiKeyManagement() {
                 </button>
               </div>
 
-              <pre className="text-[10px] font-mono p-3 rounded-xl bg-slate-950 text-slate-300 overflow-x-auto border border-white/10">
+              <pre className="text-[10px] font-mono p-3 rounded-xl bg-[#070708] text-neutral-300 overflow-x-auto border border-white/10">
 {curlSnippet}
               </pre>
 
               {sandboxResult && (
-                <div className="rounded-xl border border-slate-200 dark:border-white/10 overflow-hidden">
-                  <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-slate-100 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
+                <div className="rounded-xl border border-white/10 dark:border-white/10 overflow-hidden">
+                  <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-white/[0.04] dark:bg-white/[0.05] border-b border-white/10 dark:border-white/10">
                     <div className="flex items-center gap-2 text-[11px] font-extrabold">
                       <span className={`px-1.5 py-0.5 rounded ${sandboxResult.ok ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300' : 'bg-rose-500/20 text-rose-600 dark:text-rose-300'}`}>
                         {sandboxResult.status || 'ERR'}
                       </span>
-                      <span className="text-slate-500">{sandboxResult.ms} ms</span>
+                      <span className="text-neutral-400">{sandboxResult.ms} ms</span>
                     </div>
                     <div className="flex gap-1">
                       {['json', 'headers'].map((t) => (
                         <button
                           key={t}
                           onClick={() => setSandboxTab(t)}
-                          className={`px-2 py-1 rounded text-[10px] font-extrabold uppercase ${sandboxTab === t ? 'bg-violet-600 text-white' : 'text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10'}`}
+                          className={`px-2 py-1 rounded text-[10px] font-extrabold uppercase ${sandboxTab === t ? 'bg-amber-500 text-white' : 'text-neutral-400 hover:bg-white/10 dark:hover:bg-white/10'}`}
                         >
                           {t}
                         </button>
                       ))}
-                      <button onClick={() => copy(JSON.stringify(sandboxResult.body, null, 2), 'Response JSON')} className="px-2 py-1 rounded text-[10px] font-extrabold text-slate-500 hover:bg-slate-200 dark:hover:bg-white/10">
+                      <button onClick={() => copy(JSON.stringify(sandboxResult.body, null, 2), 'Response JSON')} className="px-2 py-1 rounded text-[10px] font-extrabold text-neutral-400 hover:bg-white/10 dark:hover:bg-white/10">
                         COPY
                       </button>
                     </div>
                   </div>
-                  <pre className="text-[10px] font-mono p-3 bg-slate-950 text-emerald-300 max-h-72 overflow-auto">
+                  <pre className="text-[10px] font-mono p-3 bg-[#070708] text-emerald-300 max-h-72 overflow-auto">
 {sandboxTab === 'json'
   ? JSON.stringify(sandboxResult.body, null, 2)
   : JSON.stringify(
@@ -387,14 +388,14 @@ export default function ApiKeyManagement() {
 
         <div className="space-y-4">
           <SectionCard title="API Reference" subtitle="v1 endpoints available to key holders">
-            <div className="divide-y divide-slate-100 dark:divide-white/5">
+            <div className="divide-y divide-white/[0.06] dark:divide-white/5">
               {ENDPOINTS.map((e) => (
                 <div key={e.path} className="p-3.5">
                   <p className="text-[11px] font-mono font-extrabold">
                     <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 text-[9px] mr-1.5">{e.method}</span>
                     {e.path}
                   </p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{e.desc}</p>
+                  <p className="text-[11px] text-neutral-400 dark:text-neutral-400 mt-1 leading-relaxed">{e.desc}</p>
                 </div>
               ))}
             </div>
@@ -402,19 +403,19 @@ export default function ApiKeyManagement() {
 
           <SectionCard title="Authentication" subtitle="Supported key transports">
             <div className="p-4 space-y-2.5 text-[11px]">
-              <div className="rounded-xl bg-slate-100 dark:bg-slate-950 p-3 font-mono">
-                <p className="text-[9px] uppercase font-extrabold tracking-wider text-slate-400 mb-1">Header (recommended)</p>
+              <div className="rounded-xl bg-white/[0.04] dark:bg-[#070708] p-3 font-mono">
+                <p className="text-[9px] uppercase font-extrabold tracking-wider text-neutral-400 mb-1">Header (recommended)</p>
                 X-API-Key: zks_live_…
               </div>
-              <div className="rounded-xl bg-slate-100 dark:bg-slate-950 p-3 font-mono">
-                <p className="text-[9px] uppercase font-extrabold tracking-wider text-slate-400 mb-1">Bearer Token</p>
+              <div className="rounded-xl bg-white/[0.04] dark:bg-[#070708] p-3 font-mono">
+                <p className="text-[9px] uppercase font-extrabold tracking-wider text-neutral-400 mb-1">Bearer Token</p>
                 Authorization: Bearer zks_live_…
               </div>
-              <div className="rounded-xl bg-slate-100 dark:bg-slate-950 p-3 font-mono">
-                <p className="text-[9px] uppercase font-extrabold tracking-wider text-slate-400 mb-1">Query String</p>
+              <div className="rounded-xl bg-white/[0.04] dark:bg-[#070708] p-3 font-mono">
+                <p className="text-[9px] uppercase font-extrabold tracking-wider text-neutral-400 mb-1">Query String</p>
                 ?api_key=zks_live_…
               </div>
-              <p className="text-slate-500 leading-relaxed">
+              <p className="text-neutral-400 leading-relaxed">
                 Revoked keys return <span className="font-mono font-bold">403 REVOKED_API_KEY</span>.
                 Invalid keys return <span className="font-mono font-bold">401 INVALID_API_KEY</span>.
               </p>
@@ -426,10 +427,10 @@ export default function ApiKeyManagement() {
               <p className="flex items-center gap-1.5 text-xs font-extrabold text-emerald-700 dark:text-emerald-300">
                 <CheckCircle2 className="w-4 h-4" /> New key created
               </p>
-              <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
+              <p className="text-[11px] text-neutral-300 dark:text-neutral-300 mt-1">
                 Copy it now — you can reveal it later from the key list.
               </p>
-              <code className="block mt-2 p-2.5 rounded-lg bg-slate-950 text-emerald-300 text-[10px] font-mono break-all">
+              <code className="block mt-2 p-2.5 rounded-lg bg-[#070708] text-emerald-300 text-[10px] font-mono break-all">
                 {createdKey.api_key}
               </code>
               <div className="flex gap-2 mt-2">
@@ -480,7 +481,7 @@ export default function ApiKeyManagement() {
               <option value="read:songs,stream:audio,read:artists,read:analytics">Full access + analytics</option>
             </select>
           </div>
-          <p className="text-[11px] text-slate-500 leading-relaxed">
+          <p className="text-[11px] text-neutral-400 leading-relaxed">
             Keys are generated with 144 bits of cryptographic entropy and prefixed with
             <span className="font-mono font-bold"> zks_live_</span>. Store them securely in your
             client&apos;s environment configuration.

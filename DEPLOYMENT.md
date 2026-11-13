@@ -193,6 +193,29 @@ switches upload transport automatically.
 In Supabase → **SQL Editor**, run `supabase/schema.sql`. It creates the tables,
 indexes, the single-admin index and the public `media` bucket.
 
+## B2b. Use the pooler string, not the direct host ⚠️
+
+On the Supabase **Free** plan the direct host (`db.<ref>.supabase.co`) is
+**IPv6-only**. Vercel Functions have no IPv6 egress, so that string fails with
+`ENETUNREACH` on every request.
+
+Copy the string from Supabase → **Connect → Session pooler** instead:
+
+```
+postgresql://postgres.<project-ref>:<password>@aws-N-<region>.pooler.supabase.com:5432/postgres
+```
+
+- The username is `postgres.<project-ref>`, not `postgres`.
+- Port **5432** = session mode. Use it: `withLock` runs `pg_advisory_xact_lock`
+  inside an explicit transaction, and advisory locks do not survive transaction
+  mode on port 6543.
+- `aws-N` is a pooler cluster index, **not** the region name. A region can have
+  several, so copy the host from the dialog — it cannot be derived.
+
+If the API cannot start it answers `503` with a JSON body naming the cause
+(`DB_UNREACHABLE`, `DB_AUTH_FAILED`, `DATABASE_URL_MISSING`, …) rather than
+letting the platform return an HTML error page.
+
 ## B3. Deploy
 
 ```bash
@@ -289,7 +312,7 @@ global CDN.
 | `DATA_DIR` | no | A | SQLite location (default `server/data`) |
 | `UPLOADS_DIR` | no | A | media root (default `server/uploads`) |
 | `MAX_UPLOAD_MB` | no | all | per-file limit (default 120) |
-| `DATABASE_URL` | B/C | B/C | Postgres connection string |
+| `DATABASE_URL` | B/C | B/C | Postgres string — **use the Session pooler** (see B2b) |
 | `SUPABASE_URL` | B/C | B/C | project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | B/C | B/C | Storage writes/deletes |
 | `SUPABASE_BUCKET` | no | B/C | defaults to `media` |

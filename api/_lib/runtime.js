@@ -147,6 +147,66 @@ function sendFile(req, res, descriptor) {
 }
 
 /**
+ * Turn a boot exception into an actionable JSON payload.
+ *
+ * The distinct failures look identical to a browser (a platform error page), so
+ * name the cause and the fix here, where the real error object still exists.
+ */
+function describeBootFailure(err) {
+  const code = err?.code || '';
+  const message = String(err?.message || '').toLowerCase();
+  const base = { error: 'The API could not start.', code: 'API_BOOT_FAILED' };
+
+  if (code === 'ENETUNREACH' || code === 'EHOSTUNREACH' || code === 'EAI_AGAIN') {
+    return {
+      ...base,
+      code: 'DB_UNREACHABLE',
+      detail:
+        'The database host is not reachable from this runtime. On Supabase Free the ' +
+        'direct host (db.<ref>.supabase.co) is IPv6-only and serverless platforms ' +
+        'have no IPv6 egress. Use the Session pooler connection string ' +
+        '(aws-N-<region>.pooler.supabase.com:5432) as DATABASE_URL.',
+    };
+  }
+  if (code === 'ENOTFOUND') {
+    return {
+      ...base,
+      code: 'DB_HOST_NOT_FOUND',
+      detail: 'The database hostname in DATABASE_URL does not resolve. Check the host for typos.',
+    };
+  }
+  if (code === '28P01' || message.includes('password authentication failed')) {
+    return {
+      ...base,
+      code: 'DB_AUTH_FAILED',
+      detail:
+        'Postgres rejected the credentials. Pooled connections use the username ' +
+        '"postgres.<project-ref>", not plain "postgres".',
+    };
+  }
+  if (code === 'ECONNREFUSED') {
+    return {
+      ...base,
+      code: 'DB_CONNECTION_REFUSED',
+      detail: 'Nothing is listening on that host/port. Check the port: 5432 = session mode, 6543 = transaction mode.',
+    };
+  }
+  if (message.includes('database_url is not set')) {
+    return { ...base, code: 'DATABASE_URL_MISSING', detail: err.message };
+  }
+  if (code === 'EACCES' || code === 'EROFS') {
+    return {
+      ...base,
+      code: 'READ_ONLY_FILESYSTEM',
+      detail:
+        'The API tried to write to a read-only directory. Set DATABASE_URL so Postgres ' +
+        'is used instead of the local SQLite file.',
+    };
+  }
+  return { ...base, detail: err?.message || 'Unknown error.' };
+}
+
+/**
  * Serve one API request.
  * @returns {Promise<{handled: boolean, status?: number}>}
  *   `handled: false` means no API route matched (the caller may serve the SPA).
@@ -171,7 +231,21 @@ export async function handleNodeRequest(req, res, { prefix = '', env = process.e
     return { handled: true, status: 204 };
   }
 
-  const api = await getApi();
+  let api;
+  try {
+    api = await getApi();
+  } catch (err) {
+    // Booting the API (connect Postgres, run schema, seed admin) always happens
+    // outside the route handler below. Without this wrapper the rejection
+    // escapes the function entirely and the platform answers with its own HTML
+    // error page — which the browser then fails to JSON.parse, hiding the real
+    // cause behind "Unexpected token 'A'". Answer with JSON instead.
+    const reason = describeBootFailure(err);
+    console.error('[ZK-SONG] API boot failed:', err);
+    if (!res.headersSent) sendJson(res, 503, reason);
+    return { handled: true, status: 503 };
+  }
+
   const { route, params, pathMatched } = api.resolve(method, path);
   if (!route) {
     return { handled: false, pathMatched };

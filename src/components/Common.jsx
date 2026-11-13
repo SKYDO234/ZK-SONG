@@ -50,7 +50,7 @@ export const STATUS_META = {
     label: 'Approved',
     Icon: CheckCircle2,
     className:
-      'bg-emerald-500/12 text-emerald-600 dark:text-emerald-300 border-emerald-500/35',
+      'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
     dot: 'bg-emerald-500',
   },
   pending: {
@@ -91,12 +91,12 @@ export function StatCard({
   onClick,
 }) {
   const tones = {
-    violet: 'from-violet-500/20 to-violet-500/0 text-violet-500 border-violet-500/25',
-    cyan: 'from-cyan-500/20 to-cyan-500/0 text-cyan-500 border-cyan-500/25',
-    emerald: 'from-emerald-500/20 to-emerald-500/0 text-emerald-500 border-emerald-500/25',
-    amber: 'from-amber-500/20 to-amber-500/0 text-amber-500 border-amber-500/25',
-    rose: 'from-rose-500/20 to-rose-500/0 text-rose-500 border-rose-500/25',
-    slate: 'from-slate-500/20 to-slate-500/0 text-slate-500 border-slate-500/25',
+    violet: 'from-amber-300/25 to-amber-300/0 text-amber-300 border-amber-300/30',
+    amber: 'from-amber-300/25 to-amber-300/0 text-amber-300 border-amber-300/30',
+    cyan: 'from-white/15 to-white/0 text-neutral-200 border-white/20',
+    emerald: 'from-white/15 to-white/0 text-neutral-200 border-white/20',
+    slate: 'from-white/10 to-white/0 text-neutral-400 border-white/15',
+    rose: 'from-rose-500/20 to-rose-500/0 text-rose-400 border-rose-500/25',
   };
   const toneCls = tones[tone] || tones.violet;
   const Tag = onClick ? 'button' : 'div';
@@ -104,26 +104,26 @@ export function StatCard({
   return (
     <Tag
       onClick={onClick}
-      className={`group relative overflow-hidden w-full text-left rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/70 p-4 sm:p-5 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 ${
+      className={`group card-3d card-3d-hover relative overflow-hidden w-full text-left rounded-2xl p-4 sm:p-5 ${
         onClick ? 'cursor-pointer' : ''
       }`}
     >
       <div
-        className={`pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br ${toneCls} blur-2xl opacity-70`}
+        className={`pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br ${toneCls} blur-2xl opacity-40`}
       />
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <p className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-400 dark:text-neutral-400">
             {label}
           </p>
           {loading ? (
-            <div className="mt-2 h-8 w-16 rounded-lg bg-slate-200 dark:bg-white/10 animate-pulse" />
+            <div className="mt-2 h-8 w-16 rounded-lg bg-white/10 dark:bg-white/10 animate-pulse" />
           ) : (
-            <p className="mt-1.5 text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+            <p className="mt-1.5 text-2xl sm:text-3xl font-black tracking-tight text-white dark:text-white">
               {value}
             </p>
           )}
-          {hint && <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{hint}</p>}
+          {hint && <p className="mt-1 text-[11px] text-neutral-400 dark:text-neutral-400">{hint}</p>}
         </div>
         {Icon && (
           <div
@@ -140,12 +140,12 @@ export function StatCard({
 export function EmptyState({ title, description, icon: Icon = Inbox, action = null }) {
   return (
     <div className="text-center py-14 px-6">
-      <div className="w-14 h-14 rounded-2xl mx-auto grid place-items-center bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
-        <Icon className="w-6 h-6 text-slate-400" />
+      <div className="w-14 h-14 rounded-2xl mx-auto grid place-items-center bg-white/[0.04] dark:bg-white/[0.05] border border-white/10 dark:border-white/10">
+        <Icon className="w-6 h-6 text-neutral-400" />
       </div>
-      <h3 className="mt-4 font-extrabold text-slate-900 dark:text-white">{title}</h3>
+      <h3 className="mt-4 font-extrabold text-white dark:text-white">{title}</h3>
       {description && (
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+        <p className="mt-1 text-sm text-neutral-400 dark:text-neutral-400 max-w-sm mx-auto">
           {description}
         </p>
       )}
@@ -177,40 +177,40 @@ export function Pagination({ pagination, onPageChange }) {
   for (let i = start; i <= end; i += 1) pages.push(i);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3.5 border-t border-slate-200 dark:border-white/10">
-      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-        Showing <span className="text-slate-900 dark:text-white">{from}</span>–
-        <span className="text-slate-900 dark:text-white">{to}</span> of{' '}
-        <span className="text-slate-900 dark:text-white">{total}</span> results
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3.5 border-t border-white/10 dark:border-white/10">
+      <p className="text-xs font-semibold text-neutral-400 dark:text-neutral-400">
+        Showing <span className="text-white dark:text-white">{from}</span>–
+        <span className="text-white dark:text-white">{to}</span> of{' '}
+        <span className="text-white dark:text-white">{total}</span> results
       </p>
       <div className="flex items-center gap-1.5">
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
-          className="p-2 rounded-lg border border-slate-200 dark:border-white/10 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+          className="p-2 rounded-lg border border-white/10 text-neutral-400 disabled:opacity-30 hover:border-amber-300/40 hover:text-amber-200 transition-colors"
           aria-label="Previous page"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
-        {start > 1 && <span className="text-xs text-slate-400 px-1">…</span>}
+        {start > 1 && <span className="text-xs text-neutral-400 px-1">…</span>}
         {pages.map((p) => (
           <button
             key={p}
             onClick={() => onPageChange(p)}
             className={`min-w-[34px] h-8 rounded-lg text-xs font-extrabold transition-all ${
               p === page
-                ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30'
-                : 'border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10'
+                ? 'bg-amber-500 text-white'
+                : 'border border-white/10 dark:border-white/10 hover:bg-white/[0.06] dark:hover:bg-white/10'
             }`}
           >
             {p}
           </button>
         ))}
-        {end < total_pages && <span className="text-xs text-slate-400 px-1">…</span>}
+        {end < total_pages && <span className="text-xs text-neutral-400 px-1">…</span>}
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page >= total_pages}
-          className="p-2 rounded-lg border border-slate-200 dark:border-white/10 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+          className="p-2 rounded-lg border border-white/10 text-neutral-400 disabled:opacity-30 hover:border-amber-300/40 hover:text-amber-200 transition-colors"
           aria-label="Next page"
         >
           <ChevronRight className="w-4 h-4" />
@@ -246,23 +246,23 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
   return (
     <div className="fixed inset-0 z-[95] flex items-start sm:items-center justify-center p-3 sm:p-6 overflow-y-auto">
       <div
-        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 bg-[#070708]/70 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
         role="presentation"
       />
       <div
-        className={`relative w-full ${sizes[size] || sizes.md} my-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-2xl animate-scale-in`}
+        className={`relative w-full ${sizes[size] || sizes.md} my-auto rounded-2xl bg-[#101013] border border-white/10 dark:border-white/10 shadow-2xl animate-scale-in`}
       >
-        <div className="flex items-start justify-between gap-4 p-5 border-b border-slate-200 dark:border-white/10">
+        <div className="flex items-start justify-between gap-4 p-5 border-b border-white/10 dark:border-white/10">
           <div>
-            <h3 className="font-extrabold text-base text-slate-900 dark:text-white">{title}</h3>
+            <h3 className="font-extrabold text-base text-white dark:text-white">{title}</h3>
             {subtitle && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-0.5">{subtitle}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-neutral-400 hover:bg-white/[0.06] dark:hover:bg-white/10 transition-colors"
             aria-label="Close dialog"
           >
             <X className="w-4 h-4" />
@@ -270,7 +270,7 @@ export function Modal({ open, onClose, title, subtitle, children, footer, size =
         </div>
         <div className="p-5">{children}</div>
         {footer && (
-          <div className="px-5 py-4 border-t border-slate-200 dark:border-white/10 flex flex-wrap justify-end gap-2">
+          <div className="px-5 py-4 border-t border-white/10 dark:border-white/10 flex flex-wrap justify-end gap-2">
             {footer}
           </div>
         )}
@@ -300,7 +300,7 @@ export function ConfirmDialog({
         <>
           <button
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-sm font-bold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+            className="px-4 py-2.5 rounded-xl border border-white/10 dark:border-white/10 text-sm font-bold hover:bg-white/[0.06] dark:hover:bg-white/10 transition-colors"
           >
             Cancel
           </button>
@@ -310,7 +310,7 @@ export function ConfirmDialog({
             className={`px-4 py-2.5 rounded-xl text-white text-sm font-extrabold disabled:opacity-50 transition-colors ${
               danger
                 ? 'bg-rose-600 hover:bg-rose-500'
-                : 'bg-violet-600 hover:bg-violet-500'
+                : 'bg-amber-500 hover:bg-amber-400'
             }`}
           >
             {loading ? <Spinner label="Working…" /> : confirmLabel}
@@ -323,12 +323,12 @@ export function ConfirmDialog({
           className={`shrink-0 w-10 h-10 rounded-xl grid place-items-center ${
             danger
               ? 'bg-rose-500/12 text-rose-500 border border-rose-500/30'
-              : 'bg-violet-500/12 text-violet-500 border border-violet-500/30'
+              : 'bg-amber-400/12 text-amber-400 border border-amber-400/30'
           }`}
         >
           <AlertTriangle className="w-5 h-5" />
         </div>
-        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{message}</p>
+        <p className="text-sm text-neutral-300 dark:text-neutral-300 leading-relaxed">{message}</p>
       </div>
     </Modal>
   );
@@ -337,16 +337,16 @@ export function ConfirmDialog({
 export function SectionCard({ title, subtitle, action, children, className = '', bodyClassName = '' }) {
   return (
     <section
-      className={`rounded-2xl bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden ${className}`}
+      className={`rounded-2xl bg-[#101013]/70 border border-white/10 dark:border-white/10 shadow-sm overflow-hidden ${className}`}
     >
       {(title || action) && (
-        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-slate-200 dark:border-white/10">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-white/10 dark:border-white/10">
           <div>
             {title && (
-              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">{title}</h3>
+              <h3 className="font-extrabold text-sm text-white dark:text-white">{title}</h3>
             )}
             {subtitle && (
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
+              <p className="text-[11px] text-neutral-400 dark:text-neutral-400 mt-0.5">{subtitle}</p>
             )}
           </div>
           {action}
@@ -358,13 +358,13 @@ export function SectionCard({ title, subtitle, action, children, className = '',
 }
 
 export const inputClass =
-  'w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500 transition-all';
+  'w-full px-3.5 py-2.5 rounded-xl bg-[#0a0a0b] dark:bg-[#070708] border border-white/10 dark:border-white/10 text-sm text-white dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 transition-all';
 
 export const labelClass =
-  'block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5';
+  'block text-[11px] font-extrabold uppercase tracking-wider text-neutral-400 dark:text-neutral-400 mb-1.5';
 
 export const primaryBtn =
-  'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white text-sm font-extrabold shadow-lg shadow-violet-600/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all';
+  'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl btn-gold text-sm font-extrabold disabled:opacity-50 disabled:cursor-not-allowed transition-all';
 
 export const ghostBtn =
-  'inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors';
+  'inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-white/10 dark:border-white/10 bg-white/[0.05] text-sm font-bold text-neutral-200 dark:text-neutral-200 hover:bg-white/[0.06] dark:hover:bg-white/10 transition-colors';
