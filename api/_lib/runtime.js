@@ -147,6 +147,60 @@ function sendFile(req, res, descriptor) {
 }
 
 /**
+ * Check every variable the API needs, without leaking any value.
+ *
+ * Reporting one missing key at a time turns a five-minute fix into five
+ * redeploy cycles, so collect all of them up front.
+ */
+export function diagnoseConfig(env = process.env) {
+  const isServerless = Boolean(env.VERCEL || env.NETLIFY || env.AWS_LAMBDA_FUNCTION_NAME);
+  const missing = [];
+  const warnings = [];
+
+  const hasDb = Boolean(env.DATABASE_URL || env.POSTGRES_URL);
+  if (!hasDb) {
+    missing.push({
+      key: isServerless ? 'DATABASE_URL' : 'DATABASE_URL (optional locally)',
+      why: isServerless
+        ? 'Required on this host: the bundle directory is read-only, so the SQLite fallback cannot run.'
+        : 'Optional locally — without it the app uses SQLite in DATA_DIR.',
+    });
+  }
+
+  const hasStorageUrl = Boolean(env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL);
+  const hasStorageKey = Boolean(env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY);
+  if (hasStorageUrl !== hasStorageKey) {
+    missing.push({
+      key: hasStorageUrl ? 'SUPABASE_SERVICE_ROLE_KEY' : 'SUPABASE_URL',
+      why: 'Uploads need both Supabase variables. With only one set, media cannot be stored.',
+    });
+  } else if (!hasStorageUrl && isServerless) {
+    missing.push({
+      key: 'SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY',
+      why: 'Without object storage, uploads would be written to a read-only filesystem.',
+    });
+  }
+
+  if (!env.JWT_SECRET && !env.APP_JWT_SECRET) {
+    const line = {
+      key: 'JWT_SECRET',
+      why: 'Falls back to the development default, so anyone reading the repository could forge an admin session.',
+    };
+    if (isServerless) missing.push(line);
+    else warnings.push(line);
+  }
+
+  if (isServerless && !env.ADMIN_PASSWORD) {
+    warnings.push({
+      key: 'ADMIN_PASSWORD',
+      why: 'Falls back to "admin123". Set it before the first boot, or the admin account is created with that password.',
+    });
+  }
+
+  return { ok: missing.length === 0, missing, warnings, serverless: isServerless };
+}
+
+/**
  * Turn a boot exception into an actionable JSON payload.
  *
  * The distinct failures look identical to a browser (a platform error page), so
@@ -241,8 +295,14 @@ export async function handleNodeRequest(req, res, { prefix = '', env = process.e
     // error page — which the browser then fails to JSON.parse, hiding the real
     // cause behind "Unexpected token 'A'". Answer with JSON instead.
     const reason = describeBootFailure(err);
+    const config = diagnoseConfig(env);
     console.error('[ZK-SONG] API boot failed:', err);
-    if (!res.headersSent) sendJson(res, 503, reason);
+    if (!res.headersSent) {
+      sendJson(res, 503, {
+        ...reason,
+        ...(config.missing.length ? { missing: config.missing } : {}),
+      });
+    }
     return { handled: true, status: 503 };
   }
 
