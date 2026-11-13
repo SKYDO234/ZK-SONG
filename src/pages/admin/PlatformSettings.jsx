@@ -28,14 +28,13 @@ import {
   ghostBtn,
   formatDate,
 } from '../../components/Common';
+import { readJson } from '../../lib/http';
 
 const PRESETS = [
-  { name: 'Violet Nebula', primary: '#8b5cf6', secondary: '#06b6d4' },
-  { name: 'Sunset Aurora', primary: '#f97316', secondary: '#ec4899' },
-  { name: 'Emerald Pulse', primary: '#10b981', secondary: '#06b6d4' },
-  { name: 'Royal Indigo', primary: '#6366f1', secondary: '#a855f7' },
-  { name: 'Crimson Heat', primary: '#e11d48', secondary: '#f59e0b' },
-  { name: 'Ocean Deep', primary: '#0ea5e9', secondary: '#22d3ee' },
+  { name: 'Onyx & Gold', primary: '#ecc257', secondary: '#d9a63a' },
+  { name: 'Antique Brass', primary: '#d9a63a', secondary: '#96671a' },
+  { name: 'Champagne', primary: '#fdf3cf', secondary: '#ecc257' },
+  { name: 'Graphite', primary: '#e5e5e5', secondary: '#8a8a8a' },
 ];
 
 export default function PlatformSettings() {
@@ -50,7 +49,7 @@ export default function PlatformSettings() {
     setLoading(true);
     try {
       const res = await authFetch('/api/admin/settings');
-      const json = await res.json();
+      const json = await readJson(res);
       if (res.ok && json.settings) {
         setForm(json.settings);
         setLogoPreview(json.settings.logo_url);
@@ -93,7 +92,7 @@ export default function PlatformSettings() {
         method: 'PUT',
         ...(body instanceof FormData ? { body } : { headers: { 'Content-Type': 'application/json' }, body }),
       });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Failed to save settings');
       setSettings(json.settings);
       setForm(json.settings);
@@ -117,7 +116,7 @@ export default function PlatformSettings() {
       title="Platform Settings"
       subtitle="Website branding, identity, and moderation configuration"
       actions={
-        <button onClick={load} className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10" aria-label="Reload settings">
+        <button onClick={load} className="p-2.5 rounded-xl border border-white/10 dark:border-white/10 hover:bg-white/[0.06] dark:hover:bg-white/10" aria-label="Reload settings">
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       }
@@ -161,7 +160,7 @@ export default function PlatformSettings() {
                 <img
                   src={logoPreview || '/zk-logo.svg'}
                   alt="Logo preview"
-                  className="w-24 h-24 rounded-2xl object-cover border border-slate-200 dark:border-white/15 bg-white"
+                  className="w-24 h-24 rounded-2xl object-cover border border-white/10 dark:border-white/15 bg-white"
                 />
                 <span className="absolute inset-0 rounded-2xl bg-black/50 grid place-items-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <UploadCloud className="w-5 h-5 text-white" />
@@ -196,7 +195,7 @@ export default function PlatformSettings() {
                     className={inputClass}
                   />
                 </div>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
+                <p className="text-[11px] text-neutral-400 leading-relaxed">
                   {logoFile
                     ? `New file selected: ${logoFile.name} — it will be uploaded on save.`
                     : 'Recommended: square 512×512 SVG/PNG with transparent background.'}
@@ -224,14 +223,14 @@ export default function PlatformSettings() {
                 <div>
                   <label className={labelClass}><span className="inline-flex items-center gap-1"><Palette className="w-3 h-3" /> Primary Color</span></label>
                   <div className="flex gap-2">
-                    <input type="color" value={form.primary_color || '#8b5cf6'} onChange={(e) => setForm({ ...form, primary_color: e.target.value })} className="w-12 h-10 rounded-lg border border-slate-200 dark:border-white/10 bg-transparent cursor-pointer" />
+                    <input type="color" value={form.primary_color || '#ecc257'} onChange={(e) => setForm({ ...form, primary_color: e.target.value })} className="w-12 h-10 rounded-lg border border-white/10 dark:border-white/10 bg-transparent cursor-pointer" />
                     <input value={form.primary_color || ''} onChange={(e) => setForm({ ...form, primary_color: e.target.value })} className={`${inputClass} font-mono`} />
                   </div>
                 </div>
                 <div>
                   <label className={labelClass}>Secondary Color</label>
                   <div className="flex gap-2">
-                    <input type="color" value={form.secondary_color || '#06b6d4'} onChange={(e) => setForm({ ...form, secondary_color: e.target.value })} className="w-12 h-10 rounded-lg border border-slate-200 dark:border-white/10 bg-transparent cursor-pointer" />
+                    <input type="color" value={form.secondary_color || '#d9a63a'} onChange={(e) => setForm({ ...form, secondary_color: e.target.value })} className="w-12 h-10 rounded-lg border border-white/10 dark:border-white/10 bg-transparent cursor-pointer" />
                     <input value={form.secondary_color || ''} onChange={(e) => setForm({ ...form, secondary_color: e.target.value })} className={`${inputClass} font-mono`} />
                   </div>
                 </div>
@@ -245,7 +244,7 @@ export default function PlatformSettings() {
                       key={p.name}
                       type="button"
                       onClick={() => applyPreset(p)}
-                      className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-left"
+                      className="flex items-center gap-2 p-2 rounded-xl border border-white/10 dark:border-white/10 hover:bg-white/[0.04] dark:hover:bg-white/5 transition-colors text-left"
                     >
                       <span className="w-7 h-7 rounded-lg shrink-0" style={{ background: `linear-gradient(135deg, ${p.primary}, ${p.secondary})` }} />
                       <span className="text-[11px] font-extrabold truncate">{p.name}</span>
@@ -254,7 +253,7 @@ export default function PlatformSettings() {
                 </div>
               </div>
 
-              <div className="rounded-xl p-4 text-white" style={{ background: `linear-gradient(120deg, ${form.primary_color || '#8b5cf6'}, ${form.secondary_color || '#06b6d4'})` }}>
+              <div className="rounded-xl p-4 text-white" style={{ background: `linear-gradient(120deg, ${form.primary_color || '#ecc257'}, ${form.secondary_color || '#d9a63a'})` }}>
                 <p className="text-[10px] font-extrabold uppercase tracking-widest opacity-80">Live Preview</p>
                 <p className="text-lg font-black mt-0.5">{form.site_name || 'ZK-SONG'}</p>
                 <p className="text-[11px] opacity-90">{form.site_tagline}</p>
@@ -265,10 +264,10 @@ export default function PlatformSettings() {
           {/* Platform config */}
           <SectionCard title="Platform Configuration" subtitle="Moderation and registration rules">
             <div className="p-4 space-y-3">
-              <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10">
+              <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-white/10 dark:border-white/10">
                 <div>
                   <p className="text-sm font-extrabold flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-amber-500" /> Require Admin Moderation</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">New uploads stay pending until an admin approves them.</p>
+                  <p className="text-[11px] text-neutral-400 mt-0.5">New uploads stay pending until an admin approves them.</p>
                 </div>
                 <button
                   type="button"
@@ -280,10 +279,10 @@ export default function PlatformSettings() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10">
+              <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-white/10 dark:border-white/10">
                 <div>
-                  <p className="text-sm font-extrabold flex items-center gap-1.5"><Lock className="w-4 h-4 text-violet-500" /> Allow New Registrations</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">When disabled, only existing artists can sign in.</p>
+                  <p className="text-sm font-extrabold flex items-center gap-1.5"><Lock className="w-4 h-4 text-amber-400" /> Allow New Registrations</p>
+                  <p className="text-[11px] text-neutral-400 mt-0.5">When disabled, only existing artists can sign in.</p>
                 </div>
                 <button
                   type="button"
@@ -313,7 +312,7 @@ export default function PlatformSettings() {
         <div className="space-y-4">
           <SectionCard title="Save Changes">
             <div className="p-4 space-y-3">
-              <p className="text-[11px] text-slate-500 leading-relaxed">
+              <p className="text-[11px] text-neutral-400 leading-relaxed">
                 Branding updates apply instantly across the public landing page, User Panel, Admin
                 Panel, and all external API responses.
               </p>
@@ -337,17 +336,17 @@ export default function PlatformSettings() {
 
           <SectionCard title="Live Branding Preview">
             <div className="p-4">
-              <div className="rounded-xl border border-slate-200 dark:border-white/10 p-3 flex items-center gap-2.5">
+              <div className="rounded-xl border border-white/10 dark:border-white/10 p-3 flex items-center gap-2.5">
                 <img src={logoPreview || '/zk-logo.svg'} alt="logo" className="w-9 h-9 rounded-lg object-cover" />
                 <div className="min-w-0">
                   <p className="font-black text-sm truncate">{form.site_name || 'ZK-SONG'}</p>
-                  <p className="text-[10px] text-slate-500 truncate">{form.accent_badge_text}</p>
+                  <p className="text-[10px] text-neutral-400 truncate">{form.accent_badge_text}</p>
                 </div>
               </div>
               <button
                 type="button"
                 className="mt-3 w-full py-2.5 rounded-xl text-white text-xs font-extrabold"
-                style={{ background: `linear-gradient(120deg, ${form.primary_color || '#8b5cf6'}, ${form.secondary_color || '#06b6d4'})` }}
+                style={{ background: `linear-gradient(120deg, ${form.primary_color || '#ecc257'}, ${form.secondary_color || '#d9a63a'})` }}
               >
                 Sample Primary Button
               </button>
@@ -360,10 +359,10 @@ export default function PlatformSettings() {
 
           <SectionCard title="Current Administrator">
             <div className="p-4 flex items-center gap-3">
-              <img src={user?.avatar_url || monogramAvatar(user?.name, user?.id)} alt={user?.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-white/15" />
+              <img src={user?.avatar_url || monogramAvatar(user?.name, user?.id)} alt={user?.name} className="w-10 h-10 rounded-xl object-cover border border-white/10 dark:border-white/15" />
               <div className="min-w-0">
                 <p className="font-extrabold text-sm truncate">{user?.name}</p>
-                <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
+                <p className="text-[11px] text-neutral-400 truncate">{user?.email}</p>
               </div>
             </div>
           </SectionCard>
@@ -372,7 +371,7 @@ export default function PlatformSettings() {
             <p className="flex items-center gap-1.5 text-xs font-extrabold text-amber-700 dark:text-amber-300">
               <AlertTriangle className="w-3.5 h-3.5" /> Heads up
             </p>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">
+            <p className="text-[11px] text-neutral-300 dark:text-neutral-400 mt-1.5 leading-relaxed">
               Disabling moderation auto-publishes every new upload immediately. Use only when you
               fully trust your artist roster.
             </p>

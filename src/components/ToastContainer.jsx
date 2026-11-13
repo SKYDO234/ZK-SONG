@@ -23,8 +23,8 @@ export default function ToastContainer() {
                 : isWarn
                   ? 'bg-amber-950/90 border-amber-500/50 text-amber-100'
                   : isInfo
-                    ? 'bg-slate-900/95 border-cyan-500/40 text-cyan-100'
-                    : 'bg-slate-900/95 border-emerald-500/50 text-emerald-100'
+                    ? 'bg-[#0d0d0f]/95 border-amber-400/40 text-neutral-200'
+                    : 'bg-[#0d0d0f]/95 border-emerald-500/50 text-emerald-100'
             }`}
           >
             <div className="mt-0.5 shrink-0">
@@ -33,7 +33,7 @@ export default function ToastContainer() {
               ) : isWarn ? (
                 <AlertTriangle className="w-5 h-5 text-amber-400" />
               ) : isInfo ? (
-                <Info className="w-5 h-5 text-cyan-400" />
+                <Info className="w-5 h-5 text-amber-300" />
               ) : (
                 <CheckCircle2 className="w-5 h-5 text-emerald-400" />
               )}
@@ -41,7 +41,7 @@ export default function ToastContainer() {
             <div className="flex-1 text-sm font-medium leading-relaxed">{t.message}</div>
             <button
               onClick={() => dismissToast(t.id)}
-              className="text-slate-400 hover:text-white transition-colors"
+              className="text-neutral-400 hover:text-white transition-colors"
               aria-label="Close notification"
             >
               <X className="w-4 h-4" />

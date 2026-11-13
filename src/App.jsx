@@ -15,12 +15,12 @@ import { Spinner } from './components/Common';
 
 function FullScreenLoader({ label = 'Loading studio…' }) {
   return (
-    <div className="min-h-screen grid place-items-center bg-slate-50 dark:bg-[#07070c]">
+    <div className="min-h-screen grid place-items-center bg-[#0a0a0b] dark:bg-[#07070c]">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-500 grid place-items-center shadow-xl shadow-violet-600/30 animate-pulse">
+        <div className="w-12 h-12 rounded-2xl btn-gold grid place-items-center animate-pulse">
           <span className="text-white font-black">ZK</span>
         </div>
-        <p className="text-sm font-bold text-slate-500 flex items-center gap-2">
+        <p className="text-sm font-bold text-neutral-400 flex items-center gap-2">
           <Spinner className="w-4 h-4" /> {label}
         </p>
       </div>

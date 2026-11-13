@@ -49,6 +49,7 @@ import {
   primaryBtn,
   ghostBtn,
 } from '../../components/Common';
+import { readJson } from '../../lib/http';
 
 /* ==========================================================================
    ADMIN DASHBOARD
@@ -64,7 +65,7 @@ export function AdminDashboard() {
     setError('');
     try {
       const res = await authFetch('/api/admin/dashboard');
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Failed to load admin dashboard');
       setData(json);
     } catch (err) {
@@ -85,9 +86,9 @@ export function AdminDashboard() {
     if (action.includes('APPROVED')) return 'text-emerald-500 bg-emerald-500/10';
     if (action.includes('REJECT') || action.includes('DELETED')) return 'text-rose-500 bg-rose-500/10';
     if (action.includes('BAN')) return 'text-amber-500 bg-amber-500/10';
-    if (action.includes('API')) return 'text-cyan-500 bg-cyan-500/10';
-    if (action.includes('SETTINGS')) return 'text-violet-500 bg-violet-500/10';
-    return 'text-slate-400 bg-slate-400/10';
+    if (action.includes('API')) return 'text-amber-400 bg-amber-400/10';
+    if (action.includes('SETTINGS')) return 'text-amber-400 bg-amber-400/10';
+    return 'text-neutral-400 bg-slate-400/10';
   };
 
   return (
@@ -98,7 +99,7 @@ export function AdminDashboard() {
       actions={
         <button
           onClick={load}
-          className="p-2.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+          className="p-2.5 rounded-xl border border-white/10 dark:border-white/10 hover:bg-white/[0.06] dark:hover:bg-white/10 transition-colors"
           aria-label="Refresh"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -132,7 +133,7 @@ export function AdminDashboard() {
             title="Pending Moderation Queue"
             subtitle="Newest uploads awaiting A&R review"
             action={
-              <Link to="/admin/songs?status=pending" className="text-xs font-extrabold text-violet-600 dark:text-violet-400 hover:underline">
+              <Link to="/admin/songs?status=pending" className="text-xs font-extrabold text-amber-500 dark:text-amber-300 hover:underline">
                 Open queue →
               </Link>
             }
@@ -144,11 +145,11 @@ export function AdminDashboard() {
             ) : (data?.pending_songs || []).length === 0 ? (
               <EmptyState icon={CheckCircle2} title="Queue is clear" description="Every submission has been moderated. Nice work!" />
             ) : (
-              <ul className="divide-y divide-slate-100 dark:divide-white/5">
+              <ul className="divide-y divide-white/[0.06] dark:divide-white/5">
                 {data.pending_songs.map((song) => {
                   const active = currentSong?.id === song.id && isPlaying;
                   return (
-                    <li key={song.id} className="flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                    <li key={song.id} className="flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-white/[0.04] dark:hover:bg-white/5 transition-colors">
                       <button
                         onClick={() => playSong(song, data.pending_songs)}
                         className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0 group"
@@ -161,11 +162,11 @@ export function AdminDashboard() {
                       </button>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-extrabold truncate">{song.title}</p>
-                        <p className="text-[11px] text-slate-500 truncate">
+                        <p className="text-[11px] text-neutral-400 truncate">
                           {song.artist} • {song.genre} • uploaded {formatDate(song.created_at)}
                         </p>
                       </div>
-                      <Link to={`/admin/songs/${song.id}`} className="shrink-0 px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-extrabold transition-colors">
+                      <Link to={`/admin/songs/${song.id}`} className="shrink-0 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-white text-[11px] font-extrabold transition-colors">
                         Review
                       </Link>
                     </li>
@@ -180,7 +181,7 @@ export function AdminDashboard() {
             <div className="p-4 space-y-2.5">
               {loading && [1, 2, 3, 4].map((i) => <div key={i} className="h-6 rounded skeleton" />)}
               {!loading && (data?.genre_breakdown || []).length === 0 && (
-                <p className="text-xs text-slate-500">No genre data available.</p>
+                <p className="text-xs text-neutral-400">No genre data available.</p>
               )}
               {!loading &&
                 (data?.genre_breakdown || []).map((g) => {
@@ -188,14 +189,14 @@ export function AdminDashboard() {
                   return (
                     <div key={g.genre}>
                       <div className="flex items-center justify-between text-[11px] font-bold mb-1">
-                        <span className="text-slate-600 dark:text-slate-300">{g.genre}</span>
-                        <span className="text-slate-400">
+                        <span className="text-neutral-300 dark:text-neutral-300">{g.genre}</span>
+                        <span className="text-neutral-400">
                           {g.count} total • {g.approved_count ?? 0} approved
                         </span>
                       </div>
-                      <div className="h-2 rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden">
+                      <div className="h-2 rounded-full bg-white/[0.04] dark:bg-white/10 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-violet-600 to-cyan-500 transition-all duration-700"
+                          className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all duration-700"
                           style={{ width: `${Math.max(6, (g.count / max) * 100)}%` }}
                         />
                       </div>
@@ -214,7 +215,7 @@ export function AdminDashboard() {
               <p className="text-[10px] font-extrabold uppercase tracking-widest text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                 <Crown className="w-3.5 h-3.5" /> Artist of the Month
               </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-[11px] text-neutral-400 dark:text-neutral-400 mt-0.5">
                 {aotm?.month_label || 'November 2026'} • auto-calculated
               </p>
               {aotm?.winner ? (
@@ -227,7 +228,7 @@ export function AdminDashboard() {
                     />
                     <div className="min-w-0">
                       <p className="font-black text-base truncate">{aotm.winner.name}</p>
-                      <p className="text-[11px] text-slate-500 truncate">
+                      <p className="text-[11px] text-neutral-400 truncate">
                         {aotm.winner.monthly_approved_count} approved songs this month
                       </p>
                     </div>
@@ -242,26 +243,26 @@ export function AdminDashboard() {
                   <div className="mt-4 space-y-1.5">
                     {(aotm.leaderboard || []).slice(0, 4).map((a, i) => (
                       <div key={a.user_id} className="flex items-center gap-2 text-[11px]">
-                        <span className={`w-5 h-5 rounded-md grid place-items-center font-black shrink-0 ${i === 0 ? 'bg-amber-400 text-slate-950' : 'bg-slate-200 dark:bg-white/10'}`}>
+                        <span className={`w-5 h-5 rounded-md grid place-items-center font-black shrink-0 ${i === 0 ? 'bg-amber-400 text-neutral-950' : 'bg-white/10 dark:bg-white/10'}`}>
                           {i + 1}
                         </span>
                         <span className="flex-1 truncate font-bold">{a.name}</span>
-                        <span className="text-slate-500 font-semibold">{a.monthly_approved_count}</span>
+                        <span className="text-neutral-400 font-semibold">{a.monthly_approved_count}</span>
                       </div>
                     ))}
                   </div>
                 </>
               ) : (
-                <p className="text-xs text-slate-500 mt-3">No approved songs this month yet.</p>
+                <p className="text-xs text-neutral-400 mt-3">No approved songs this month yet.</p>
               )}
             </div>
           </div>
 
           <SectionCard title="Recent Activity" subtitle="Platform audit trail">
-            <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-100 dark:divide-white/5">
+            <div className="max-h-[380px] overflow-y-auto divide-y divide-white/[0.06] dark:divide-white/5">
               {loading && [1, 2, 3].map((i) => <div key={i} className="m-3 h-12 rounded-lg skeleton" />)}
               {!loading && (data?.recent_activity || []).length === 0 && (
-                <p className="p-6 text-center text-xs text-slate-500">No activity logged yet.</p>
+                <p className="p-6 text-center text-xs text-neutral-400">No activity logged yet.</p>
               )}
               {!loading &&
                 (data?.recent_activity || []).map((log) => (
@@ -271,10 +272,10 @@ export function AdminDashboard() {
                     </span>
                     <div className="min-w-0">
                       <p className="text-[11px] font-extrabold truncate">{log.action.replace(/_/g, ' ')}</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                      <p className="text-[11px] text-neutral-400 dark:text-neutral-400 leading-relaxed line-clamp-2">
                         {log.details}
                       </p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">
+                      <p className="text-[10px] text-neutral-400 mt-0.5">
                         {log.actor_name} • {formatDate(log.created_at, true)}
                       </p>
                     </div>
@@ -299,7 +300,7 @@ export function AdminDashboard() {
 function AdminSongCard({ song, onApprove, onReject, onDelete, busy, playSong, currentSong, isPlaying, compact = false }) {
   const active = currentSong?.id === song.id && isPlaying;
   return (
-    <div className="p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/60 hover:shadow-lg transition-all">
+    <div className="p-3 sm:p-4 rounded-2xl border border-white/10 dark:border-white/10 bg-[#101013]/60 hover:shadow-lg transition-all">
       <div className="flex flex-col sm:flex-row gap-3">
         <button
           onClick={() => playSong(song, [song])}
@@ -311,7 +312,7 @@ function AdminSongCard({ song, onApprove, onReject, onDelete, busy, playSong, cu
             {active ? <Pause className="w-5 h-5 text-white" /> : <Play className="w-5 h-5 text-white fill-white" />}
           </span>
           {song.is_artist_of_the_month && (
-            <span className="absolute top-1 left-1 p-1 rounded-md bg-amber-400 text-slate-950">
+            <span className="absolute top-1 left-1 p-1 rounded-md bg-amber-400 text-neutral-950">
               <Crown className="w-3 h-3" />
             </span>
           )}
@@ -325,21 +326,21 @@ function AdminSongCard({ song, onApprove, onReject, onDelete, busy, playSong, cu
               <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 text-[10px] font-extrabold border border-amber-500/30">COVER</span>
             )}
             {song.has_video && (
-              <span className="px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-600 dark:text-violet-300 text-[10px] font-extrabold border border-violet-500/30 inline-flex items-center gap-1">
+              <span className="px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-500 dark:text-amber-200 text-[10px] font-extrabold border border-amber-400/30 inline-flex items-center gap-1">
                 <Video className="w-2.5 h-2.5" /> VIDEO
               </span>
             )}
           </div>
-          <p className="text-[11px] text-slate-500 mt-1 truncate">
+          <p className="text-[11px] text-neutral-400 mt-1 truncate">
             {song.artist} • {song.genre} • {song.duration_formatted || formatDuration(song.duration)} • {formatNumber(song.plays_count)} plays
           </p>
-          <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+          <p className="text-[11px] text-neutral-400 mt-0.5 truncate">
             Uploaded by <span className="font-bold">{song.uploader?.name || 'Unknown'}</span> • {formatDate(song.created_at)}
           </p>
           {!compact && (
-            <div className="hidden sm:flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-[10px] text-slate-400">
-              <span>Musician: <span className="font-semibold text-slate-500 dark:text-slate-300">{song.musician}</span></span>
-              <span>Composer: <span className="font-semibold text-slate-500 dark:text-slate-300">{song.composer}</span></span>
+            <div className="hidden sm:flex flex-wrap gap-x-4 gap-y-1 mt-1.5 text-[10px] text-neutral-400">
+              <span>Musician: <span className="font-semibold text-neutral-400 dark:text-neutral-300">{song.musician}</span></span>
+              <span>Composer: <span className="font-semibold text-neutral-400 dark:text-neutral-300">{song.composer}</span></span>
             </div>
           )}
         </div>
@@ -348,7 +349,7 @@ function AdminSongCard({ song, onApprove, onReject, onDelete, busy, playSong, cu
           <div className="flex items-center gap-1.5">
             <Link
               to={`/admin/songs/${song.id}`}
-              className="p-2 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-violet-500/10 hover:text-violet-500 transition-colors"
+              className="p-2 rounded-lg border border-white/10 dark:border-white/10 hover:bg-amber-400/10 hover:text-amber-400 transition-colors"
               title="Open song details"
             >
               <Eye className="w-4 h-4" />
@@ -374,7 +375,7 @@ function AdminSongCard({ song, onApprove, onReject, onDelete, busy, playSong, cu
             <button
               onClick={() => onDelete(song)}
               disabled={busy}
-              className="p-2 rounded-lg border border-slate-300 dark:border-white/10 text-slate-500 hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors disabled:opacity-40"
+              className="p-2 rounded-lg border border-white/15 dark:border-white/10 text-neutral-400 hover:bg-white/10/60 dark:hover:bg-white/10 transition-colors disabled:opacity-40"
               title="Delete from platform"
             >
               <Trash2 className="w-4 h-4" />
@@ -418,7 +419,7 @@ export function AdminSongs() {
     try {
       const qs = new URLSearchParams({ ...filters, page: String(page), limit: '10' });
       const res = await authFetch(`/api/admin/songs?${qs.toString()}`);
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Failed to load songs');
       setSongs(json.songs || []);
       setGenres(json.genres || []);
@@ -443,7 +444,7 @@ export function AdminSongs() {
     setBusyId(song.id);
     try {
       const res = await authFetch(`/api/admin/songs/${song.id}/approve`, { method: 'POST' });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Approval failed');
       notify(json.message, 'success');
       load();
@@ -465,7 +466,7 @@ export function AdminSongs() {
           reason: rejectReason.trim() || 'Did not meet studio quality or copyright verification standards.',
         }),
       });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Rejection failed');
       notify(json.message, 'success');
       setRejectTarget(null);
@@ -484,7 +485,7 @@ export function AdminSongs() {
     setDeleteLoading(true);
     try {
       const res = await authFetch(`/api/admin/songs/${deleteTarget.id}`, { method: 'DELETE' });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Delete failed');
       notify(json.message, 'success');
       setDeleteTarget(null);
@@ -503,14 +504,14 @@ export function AdminSongs() {
         title="Song Catalogue"
         subtitle={`${pagination?.total ?? 0} song(s) matching your filters`}
         action={
-          <button onClick={load} className="p-2 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10" aria-label="Refresh">
+          <button onClick={load} className="p-2 rounded-lg border border-white/10 dark:border-white/10 hover:bg-white/[0.06] dark:hover:bg-white/10" aria-label="Refresh">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </button>
         }
       >
-        <div className="p-4 border-b border-slate-200 dark:border-white/10 space-y-3">
+        <div className="p-4 border-b border-white/10 dark:border-white/10 space-y-3">
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
@@ -519,26 +520,26 @@ export function AdminSongs() {
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-xs font-bold">
+            <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className="px-3 py-2 rounded-lg bg-[#0a0a0b] dark:bg-[#070708] border border-white/10 dark:border-white/10 text-xs font-bold">
               <option value="all">All Statuses</option>
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
             </select>
-            <select value={filters.genre} onChange={(e) => setFilters({ ...filters, genre: e.target.value })} className="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-xs font-bold">
+            <select value={filters.genre} onChange={(e) => setFilters({ ...filters, genre: e.target.value })} className="px-3 py-2 rounded-lg bg-[#0a0a0b] dark:bg-[#070708] border border-white/10 dark:border-white/10 text-xs font-bold">
               <option value="all">All Genres</option>
               {genres.map((g) => <option key={g} value={g}>{g}</option>)}
             </select>
-            <select value={filters.is_cover} onChange={(e) => setFilters({ ...filters, is_cover: e.target.value })} className="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-xs font-bold">
+            <select value={filters.is_cover} onChange={(e) => setFilters({ ...filters, is_cover: e.target.value })} className="px-3 py-2 rounded-lg bg-[#0a0a0b] dark:bg-[#070708] border border-white/10 dark:border-white/10 text-xs font-bold">
               <option value="all">Originals & Covers</option>
               <option value="no">Originals only</option>
               <option value="yes">Covers only</option>
             </select>
-            <select value={filters.has_video} onChange={(e) => setFilters({ ...filters, has_video: e.target.value })} className="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-xs font-bold">
+            <select value={filters.has_video} onChange={(e) => setFilters({ ...filters, has_video: e.target.value })} className="px-3 py-2 rounded-lg bg-[#0a0a0b] dark:bg-[#070708] border border-white/10 dark:border-white/10 text-xs font-bold">
               <option value="all">Any Media</option>
               <option value="yes">With Music Video</option>
               <option value="no">Audio only</option>
             </select>
-            <select value={filters.sort} onChange={(e) => setFilters({ ...filters, sort: e.target.value })} className="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-xs font-bold">
+            <select value={filters.sort} onChange={(e) => setFilters({ ...filters, sort: e.target.value })} className="px-3 py-2 rounded-lg bg-[#0a0a0b] dark:bg-[#070708] border border-white/10 dark:border-white/10 text-xs font-bold">
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
               <option value="plays">Most played</option>
@@ -616,13 +617,13 @@ function RejectModal({ song, reason, setReason, onClose, onSubmit, loading }) {
   ];
   return (
     <div className="fixed inset-0 z-[97] flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm" onClick={onClose} role="presentation" />
-      <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-2xl animate-scale-in">
-        <div className="p-5 border-b border-slate-200 dark:border-white/10">
+      <div className="fixed inset-0 bg-[#070708]/70 backdrop-blur-sm" onClick={onClose} role="presentation" />
+      <div className="relative w-full max-w-lg rounded-2xl bg-[#101013] border border-white/10 dark:border-white/10 shadow-2xl animate-scale-in">
+        <div className="p-5 border-b border-white/10 dark:border-white/10">
           <h3 className="font-extrabold flex items-center gap-2">
             <XCircle className="w-4 h-4 text-rose-500" /> Reject & Permanently Remove
           </h3>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-neutral-400 mt-1">
             “{song?.title}” by {song?.artist} will be deleted from the database and disk storage.
           </p>
         </div>
@@ -643,14 +644,14 @@ function RejectModal({ song, reason, setReason, onClose, onSubmit, loading }) {
                 key={p}
                 type="button"
                 onClick={() => setReason(p)}
-                className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-white/10 text-[10px] font-bold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors text-left"
+                className="px-2.5 py-1 rounded-lg border border-white/10 dark:border-white/10 text-[10px] font-bold hover:bg-white/[0.06] dark:hover:bg-white/10 transition-colors text-left"
               >
                 {p.length > 42 ? `${p.slice(0, 42)}…` : p}
               </button>
             ))}
           </div>
         </div>
-        <div className="px-5 py-4 border-t border-slate-200 dark:border-white/10 flex justify-end gap-2">
+        <div className="px-5 py-4 border-t border-white/10 dark:border-white/10 flex justify-end gap-2">
           <button onClick={onClose} className={ghostBtn}>Cancel</button>
           <button
             onClick={onSubmit}
@@ -693,7 +694,7 @@ export function ApprovedSongs() {
         limit: '12',
       });
       const res = await authFetch(`/api/admin/songs?${qs.toString()}`);
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Failed to load approved songs');
       setSongs(json.songs || []);
       setGenres(json.genres || []);
@@ -716,7 +717,7 @@ export function ApprovedSongs() {
     setRemoving(true);
     try {
       const res = await authFetch(`/api/admin/songs/${removeTarget.id}`, { method: 'DELETE' });
-      const json = await res.json();
+      const json = await readJson(res);
       if (!res.ok) throw new Error(json.error || 'Delete failed');
       notify(json.message, 'success');
       setRemoveTarget(null);
@@ -742,14 +743,14 @@ export function ApprovedSongs() {
         title="Published Catalogue"
         subtitle="Live in public catalogue, streaming player, and /api/v1/songs"
         action={
-          <Link to="/admin/api-keys" className="text-xs font-extrabold text-violet-600 dark:text-violet-400 hover:underline inline-flex items-center gap-1">
+          <Link to="/admin/api-keys" className="text-xs font-extrabold text-amber-500 dark:text-amber-300 hover:underline inline-flex items-center gap-1">
             <ExternalLink className="w-3 h-3" /> API Keys
           </Link>
         }
       >
-        <div className="p-4 border-b border-slate-200 dark:border-white/10 flex flex-col sm:flex-row gap-2">
+        <div className="p-4 border-b border-white/10 dark:border-white/10 flex flex-col sm:flex-row gap-2">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -757,11 +758,11 @@ export function ApprovedSongs() {
               className={`${inputClass} pl-10`}
             />
           </div>
-          <select value={genre} onChange={(e) => setGenre(e.target.value)} className="px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-xs font-bold">
+          <select value={genre} onChange={(e) => setGenre(e.target.value)} className="px-3 py-2.5 rounded-xl bg-[#0a0a0b] dark:bg-[#070708] border border-white/10 dark:border-white/10 text-xs font-bold">
             <option value="all">All Genres</option>
             {genres.map((g) => <option key={g} value={g}>{g}</option>)}
           </select>
-          <select value={sort} onChange={(e) => setSort(e.target.value)} className="px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-white/10 text-xs font-bold">
+          <select value={sort} onChange={(e) => setSort(e.target.value)} className="px-3 py-2.5 rounded-xl bg-[#0a0a0b] dark:bg-[#070708] border border-white/10 dark:border-white/10 text-xs font-bold">
             <option value="approved_newest">Recently approved</option>
             <option value="plays">Most played</option>
             <option value="title">Title A–Z</option>
@@ -780,21 +781,21 @@ export function ApprovedSongs() {
               {songs.map((song) => {
                 const active = currentSong?.id === song.id && isPlaying;
                 return (
-                  <div key={song.id} className="group rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden bg-white dark:bg-slate-900/60 hover:shadow-xl transition-all">
+                  <div key={song.id} className="group rounded-2xl border border-white/10 dark:border-white/10 overflow-hidden bg-[#101013]/60 hover:shadow-xl transition-all">
                     <div className="relative aspect-square overflow-hidden">
                       <img src={mediaUrl(song.thumbnail_url)} alt={song.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                       <div className="absolute top-2 left-2 flex flex-wrap gap-1">
                         {song.is_artist_of_the_month && (
-                          <span className="px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 text-[9px] font-black inline-flex items-center gap-0.5">
+                          <span className="px-1.5 py-0.5 rounded-md bg-amber-400 text-neutral-950 text-[9px] font-black inline-flex items-center gap-0.5">
                             <Crown className="w-2.5 h-2.5" /> AOTM
                           </span>
                         )}
                         {song.is_cover && (
-                          <span className="px-1.5 py-0.5 rounded-md bg-white/90 text-slate-900 text-[9px] font-black">COVER</span>
+                          <span className="px-1.5 py-0.5 rounded-md bg-white/90 text-white text-[9px] font-black">COVER</span>
                         )}
                         {song.has_video && (
-                          <span className="px-1.5 py-0.5 rounded-md bg-violet-600 text-white text-[9px] font-black">VIDEO</span>
+                          <span className="px-1.5 py-0.5 rounded-md bg-amber-500 text-white text-[9px] font-black">VIDEO</span>
                         )}
                       </div>
                       <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between gap-2">
@@ -804,7 +805,7 @@ export function ApprovedSongs() {
                         </div>
                         <button
                           onClick={() => playSong(song, songs)}
-                          className="w-9 h-9 rounded-full bg-white text-slate-900 grid place-items-center shrink-0 shadow-lg hover:scale-105 transition-transform"
+                          className="w-9 h-9 rounded-full bg-white text-white grid place-items-center shrink-0 shadow-lg hover:scale-105 transition-transform"
                           aria-label={`Play ${song.title}`}
                         >
                           {active ? <Pause className="w-4 h-4 fill-slate-900" /> : <Play className="w-4 h-4 fill-slate-900" />}
@@ -812,23 +813,23 @@ export function ApprovedSongs() {
                       </div>
                     </div>
                     <div className="p-3 space-y-2">
-                      <div className="flex items-center justify-between text-[10px] text-slate-500">
+                      <div className="flex items-center justify-between text-[10px] text-neutral-400">
                         <span className="font-semibold truncate">{song.genre}</span>
                         <span>{song.duration_formatted} • {formatNumber(song.plays_count)} plays</span>
                       </div>
-                      <p className="text-[10px] text-slate-400 truncate">
+                      <p className="text-[10px] text-neutral-400 truncate">
                         Approved {formatDate(song.approved_at)} by {song.uploader?.name || 'artist'}
                       </p>
-                      <div className="flex items-center gap-1 pt-1 border-t border-slate-100 dark:border-white/5">
-                        <Link to={`/admin/songs/${song.id}`} className="flex-1 text-center py-1.5 rounded-lg text-[10px] font-extrabold bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
+                      <div className="flex items-center gap-1 pt-1 border-t border-white/[0.07] dark:border-white/5">
+                        <Link to={`/admin/songs/${song.id}`} className="flex-1 text-center py-1.5 rounded-lg text-[10px] font-extrabold bg-white/[0.04] dark:bg-white/[0.05] hover:bg-white/10 dark:hover:bg-white/10 transition-colors">
                           Details
                         </Link>
                         {song.has_video && (
-                          <button onClick={() => openVideoModal(song)} className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-violet-500/10 hover:text-violet-500" title="Music video">
+                          <button onClick={() => openVideoModal(song)} className="p-1.5 rounded-lg border border-white/10 dark:border-white/10 hover:bg-amber-400/10 hover:text-amber-400" title="Music video">
                             <Video className="w-3.5 h-3.5" />
                           </button>
                         )}
-                        <button onClick={() => downloadMedia(song, 'audio')} className="p-1.5 rounded-lg border border-slate-200 dark:border-white/10 hover:bg-cyan-500/10 hover:text-cyan-500" title="Download audio">
+                        <button onClick={() => downloadMedia(song, 'audio')} className="p-1.5 rounded-lg border border-white/10 dark:border-white/10 hover:bg-amber-400/10 hover:text-amber-400" title="Download audio">
                           <Download className="w-3.5 h-3.5" />
                         </button>
                         <button onClick={() => setRemoveTarget(song)} className="p-1.5 rounded-lg border border-rose-500/30 text-rose-500 hover:bg-rose-500/10" title="Remove from library">

@@ -142,8 +142,8 @@ const DEFAULT_SETTINGS = {
   site_description:
     'The professional music-uploading & distribution ecosystem for artists, musicians, and composers. Upload studio tracks, earn the Artist of the Month crown, and stream globally to external music apps via the ZK-SONG REST API.',
   logo_url: '/uploads/branding/zk-logo.svg',
-  primary_color: '#8b5cf6',
-  secondary_color: '#06b6d4',
+  primary_color: '#ecc257',
+  secondary_color: '#d9a63a',
   accent_badge_text: 'STUDIO CLOUD v2.6',
   contact_email: 'support@zksong.io',
   footer_text:
@@ -162,6 +162,16 @@ async function createSqliteStore(opts = {}) {
   const { DatabaseSync } = await import('node:sqlite');
 
   const root = getAppRoot();
+  const readOnlyFs = Boolean(
+    process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
+  );
+  if (!process.env.DATA_DIR && readOnlyFs) {
+    throw new Error(
+      'DATABASE_URL is not set. This host has a read-only filesystem, so the ' +
+        'SQLite fallback cannot work. Set DATABASE_URL to a Postgres connection ' +
+        'string (Supabase Session pooler, Neon, Vercel Postgres).'
+    );
+  }
   const dataDir = process.env.DATA_DIR || path.join(root, 'server', 'data');
   if (dataDir !== ':memory:') fs.mkdirSync(dataDir, { recursive: true });
 
@@ -219,14 +229,34 @@ async function createSqliteStore(opts = {}) {
 
 async function createPgStore(opts = {}) {
   const { default: pg } = await import('pg');
+  const url = databaseUrl();
+  const isServerless = Boolean(
+    process.env.VERCEL || process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME
+  );
   const pool = new pg.Pool({
-    connectionString: databaseUrl(),
-    ssl: /localhost|127\.0\.0\.1|sslmode=disable/.test(databaseUrl())
+    connectionString: url,
+    ssl: /localhost|127\.0\.0\.1|sslmode=disable/.test(url)
       ? false
       : { rejectUnauthorized: false },
-    max: Number(process.env.PGPOOL_MAX || 3),
+    // Serverless: one connection per instance. Every warm instance would
+    // otherwise multiply the pool against Supabase's connection quota.
+    max: Number(process.env.PGPOOL_MAX || (isServerless ? 1 : 3)),
     idleTimeoutMillis: 10_000,
-    connectionTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 12_000,
+  });
+
+  // Node gives a bare "connect ENETUNREACH" when a host resolves only to IPv6
+  // and the platform has no IPv6 egress (Vercel, most serverless). The message
+  // is useless to a human, so translate it into the actual fix.
+  pool.on('error', (err) => {
+    if (err && (err.code === 'ENETUNREACH' || err.code === 'EHOSTUNREACH')) {
+      console.error(
+        '[ZK-SONG] The database host resolves only to IPv6 and this runtime has ' +
+          'no IPv6 egress. On Supabase Free, direct connections (db.<ref>.supabase.co) ' +
+          'are IPv6-only. Use the Session pooler string instead: ' +
+          'postgresql://postgres.<ref>:<password>@aws-N-<region>.pooler.supabase.com:5432/postgres'
+      );
+    }
   });
 
   const raws = createPostgresStore(pool, {

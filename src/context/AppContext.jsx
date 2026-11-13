@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { readJson } from '../lib/http';
 import { withApiBase, mediaUrl } from '../lib/apiBase';
 
 const AppContext = createContext(null);
@@ -44,8 +45,8 @@ export function AppProvider({ children }) {
     site_description:
       'The professional music-uploading & distribution ecosystem for artists, musicians, and composers.',
     logo_url: '/uploads/branding/zk-logo.svg',
-    primary_color: '#8b5cf6',
-    secondary_color: '#06b6d4',
+    primary_color: '#ecc257',
+    secondary_color: '#d9a63a',
     accent_badge_text: 'STUDIO CLOUD v2.6',
     contact_email: 'support@zksong.io',
     footer_text: '© 2026 ZK-SONG Music Publishing & API Ecosystem.',
@@ -74,17 +75,17 @@ export function AppProvider({ children }) {
     try {
       const res = await fetch('/api/public/bootstrap');
       if (res.ok) {
-        const data = await res.json();
+        const data = await readJson(res);
         if (data.settings) {
           setSettings(data.settings);
           document.title = `${data.settings.site_name} — ${data.settings.site_tagline || 'Music Platform'}`;
           document.documentElement.style.setProperty(
             '--brand-primary',
-            data.settings.primary_color || '#8b5cf6'
+            data.settings.primary_color || '#ecc257'
           );
           document.documentElement.style.setProperty(
             '--brand-secondary',
-            data.settings.secondary_color || '#06b6d4'
+            data.settings.secondary_color || '#d9a63a'
           );
         }
         if (data.artist_of_the_month) setArtistOfTheMonth(data.artist_of_the_month);
@@ -111,7 +112,7 @@ export function AppProvider({ children }) {
           headers: { Authorization: `Bearer ${activeToken}` },
         });
         if (res.ok) {
-          const data = await res.json();
+          const data = await readJson(res);
           setUser(data.user);
           setUnreadNotifications(data.unread_notifications || 0);
           setIsPlatformOwner(Boolean(data.is_platform_owner));
@@ -149,7 +150,7 @@ export function AppProvider({ children }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-    const data = await res.json();
+    const data = await readJson(res);
     if (!res.ok) {
       throw new Error(data.error || 'Login failed');
     }
@@ -167,7 +168,7 @@ export function AppProvider({ children }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    const data = await res.json();
+    const data = await readJson(res);
     if (!res.ok) {
       throw new Error(data.error || 'Registration failed');
     }
