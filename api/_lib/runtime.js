@@ -147,6 +147,34 @@ function sendFile(req, res, descriptor) {
 }
 
 /**
+ * Describe the connection target WITHOUT its password.
+ *
+ * `28P01` (password authentication failed) is ambiguous in two ways worth
+ * telling apart: a genuinely wrong password, and Supabase's pooler rejecting an
+ * unknown tenant because the username lacks the project ref. Echoing the parsed
+ * host/port/user makes the difference visible in the response.
+ */
+export function dbTargetSummary(env = process.env) {
+  const raw = env.DATABASE_URL || env.POSTGRES_URL || '';
+  if (!raw) return null;
+  try {
+    const u = new URL(raw);
+    const username = decodeURIComponent(u.username || '');
+    return {
+      host: u.hostname,
+      port: u.port || '5432',
+      database: (u.pathname || '/postgres').slice(1) || 'postgres',
+      username,
+      pooled: /\.pooler\.supabase\.com$/i.test(u.hostname),
+      username_has_project_ref: /^postgres\.[a-z0-9]{16,}$/i.test(username),
+      password_length: u.password ? decodeURIComponent(u.password).length : 0,
+    };
+  } catch {
+    return { error: 'DATABASE_URL is not a valid URL.' };
+  }
+}
+
+/**
  * Check every variable the API needs, without leaking any value.
  *
  * Reporting one missing key at a time turns a five-minute fix into five
@@ -230,12 +258,21 @@ function describeBootFailure(err) {
     };
   }
   if (code === '28P01' || message.includes('password authentication failed')) {
+    const t = dbTargetSummary();
+    // Supavisor answers an unknown tenant with the same error as a bad password,
+    // so a username without the project ref is the more likely of the two.
+    const usernameLooksWrong =
+      t && t.pooled && t.username_has_project_ref === false;
     return {
       ...base,
       code: 'DB_AUTH_FAILED',
-      detail:
-        'Postgres rejected the credentials. Pooled connections use the username ' +
-        '"postgres.<project-ref>", not plain "postgres".',
+      detail: usernameLooksWrong
+        ? `The username "${t.username}" has no project ref. Pooled connections must use ` +
+          '"postgres.<project-ref>". Copy the string from Supabase → Connect → Session pooler.'
+        : 'Postgres rejected the password for this user. Reset it in Supabase → ' +
+          'Project Settings → Database → Reset database password, then paste the new value ' +
+          'into DATABASE_URL (percent-encode any of @ : / ? # [ ] in it).',
+      ...(t ? { database_target: t } : {}),
     };
   }
   if (code === 'ECONNREFUSED') {
