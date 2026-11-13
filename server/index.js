@@ -48,7 +48,12 @@ const { generateTrackMedia } = require('./generateMedia');
 
   // Built frontend (only present after `npm run build`)
   const distPath = path.join(__dirname, '..', 'dist');
-  if (fs.existsSync(distPath)) {
+  if (!fs.existsSync(distPath)) {
+    console.warn(
+      '[ZK-SONG] No dist/ build found — the API is running, but the website is not. ' +
+        'Run `npm run build` and restart to serve the site from this server.'
+    );
+  } else {
     app.use(
       express.static(distPath, {
         index: false,

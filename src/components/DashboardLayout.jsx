@@ -339,6 +339,15 @@ export function DashboardLayout({ variant = 'user', title, subtitle, actions, ch
         </header>
 
         <main className="p-4 sm:p-6 pb-28 lg:pb-10 max-w-[1500px] mx-auto">{children}</main>
+
+        <footer className="border-t border-slate-200 dark:border-white/10 px-4 sm:px-6 py-5 mb-20 lg:mb-0">
+          <div className="max-w-[1500px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="font-extrabold tracking-[0.18em] uppercase text-slate-600 dark:text-slate-300">
+              Website by ZK Studio
+            </p>
+            <p className="font-semibold">CEO &amp; MD — Ziyan Hossain</p>
+          </div>
+        </footer>
       </div>
     </div>
   );

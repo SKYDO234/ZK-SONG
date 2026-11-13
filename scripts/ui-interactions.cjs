@@ -7,8 +7,15 @@ const bundle = fs.readFileSync('/tmp/client.js', 'utf8');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const results = [];
 
+let pageErrors = [];
+
 async function boot(path, token) {
+  pageErrors = [];
   const virtualConsole = new VirtualConsole();
+  virtualConsole.on('jsdomError', (err) => {
+    pageErrors.push(err.message);
+    console.log(`   ! page error: ${String(err.message).slice(0, 160)}`);
+  });
   const dom = new JSDOM(`<!doctype html><html><body><div id="root"></div></body></html>`, {
     url: `${BASE}${path}`,
     runScripts: 'dangerously',
@@ -34,6 +41,10 @@ async function boot(path, token) {
   script.textContent = bundle;
   dom.window.document.body.appendChild(script);
   await sleep(2200);
+  const mounted = dom.window.document.getElementById('root').textContent.trim().length;
+  if (!mounted) {
+    console.log(`   ! ${path} rendered an empty root — the bundle failed to mount`);
+  }
   return dom;
 }
 
@@ -185,6 +196,9 @@ function check(name, cond, detail = '') {
   dom.window.close();
 
   await cleanup();
+  if (pageErrors.length) {
+    check('No uncaught errors in the client bundle', false, pageErrors[0].slice(0, 120));
+  }
   const failed = results.filter((r) => !r.ok).length;
   console.log(`\n${results.length - failed}/${results.length} interaction checks passed`);
   process.exit(failed ? 1 : 0);

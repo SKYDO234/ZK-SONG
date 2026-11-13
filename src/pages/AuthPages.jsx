@@ -63,8 +63,14 @@ function AuthShell({ title, subtitle, children }) {
         </div>
       </div>
 
-      <div className="text-center text-xs text-slate-500 py-4 relative z-10">
-        {settings.footer_text}
+      <div className="text-center text-xs text-slate-500 py-4 relative z-10 space-y-1">
+        <p>{settings.footer_text}</p>
+        <p className="text-[11px] font-extrabold tracking-[0.18em] uppercase text-slate-600 dark:text-slate-300">
+          Website by ZK Studio
+        </p>
+        <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+          CEO &amp; MD — Ziyan Hossain
+        </p>
       </div>
     </div>
   );
