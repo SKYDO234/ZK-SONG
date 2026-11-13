@@ -96,6 +96,9 @@ npm run build
 npm start          # http://localhost:4000
 ```
 
+Deploying to a VPS? `sudo DOMAIN=your-domain.com bash deploy/vps-setup.sh`
+installs Node, nginx, systemd and HTTPS for you — see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ---
 
 ## 🔌 External REST API (v1)
@@ -126,50 +129,76 @@ Errors: `{ "status": "error", "code": "MISSING_API_KEY | INVALID_API_KEY | REVOK
 
 ## ☁️ Deployment
 
-**Vercel / Netlify can host the frontend.** The API needs persistent storage for uploads,
-so it runs on Supabase Edge Functions + Storage or on a Docker host with a volume.
+**One codebase, four hosting shapes.** The API lives in `api/` and is shared by
+every host, so nothing can drift between them.
 
-See **[DEPLOYMENT.md](DEPLOYMENT.md)** for the three supported topologies, exact commands
-and the environment-variable reference. In short:
+| Shape | Website | API | Database | Media | Best for |
+| --- | --- | --- | --- | --- | --- |
+| **A** | Node server | Node process (Express) | SQLite file | local disk | **a VPS** (2 cores / 4 GB is plenty), Docker, Render, Fly |
+| **B** | Vercel CDN | Vercel Function | Postgres | Supabase Storage | zero-ops free tier |
+| **C** | Netlify CDN | Netlify Function | Postgres | Supabase Storage | zero-ops free tier |
+| **D** | Vercel/Netlify | your server | SQLite (yours) | disk (yours) | CDN frontend, one box to own |
 
-| Topology | Frontend | API + storage |
-| --- | --- | --- |
-| **A** | served by the API | one Docker container + volume (`render.yaml` included) |
-| **B** | Vercel or Netlify | Supabase Edge Function + Postgres + Storage ([`supabase/schema.sql`](supabase/schema.sql)) |
-| **C** | Vercel or Netlify | Docker host, with `ALLOWED_ORIGIN` locked down |
-
-Static hosts point at the API with one build-time variable:
+The API chooses automatically from its environment:
 
 ```
-VITE_API_BASE_URL=https://<project-ref>.supabase.co/functions/v1/api
+DATABASE_URL           → Postgres      (absent → SQLite file)
+SUPABASE_URL + key     → Storage bucket (absent → server/uploads/)
 ```
+
+**Self-hosting on a VPS is one command:**
+
+```bash
+sudo DOMAIN=your-domain.com bash deploy/vps-setup.sh
+cd /opt/zksong && sudo -u zksong npm ci && sudo -u zksong npm run build
+sudo systemctl restart zksong
+```
+
+**Serverless hosts** reach Supabase for the two things a function cannot keep —
+the database and the files. Because Vercel caps requests at 4.5 MB (Netlify 6 MB),
+the browser uploads audio **straight to the bucket** using a signed URL, and
+`/api/v1/stream/:id` answers with a `302` to the storage CDN (which supports
+HTTP Range natively). Audio never passes through a function.
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for every shape, the HTTPS/backup routine,
+disk planning and the full environment-variable reference.
 
 ---
 
 ## 🗂 Project structure
 
 ```
+api/                       # THE API — one copy, used by every deployment
+  _lib/app.js              #   every route (public, auth, user, admin, /api/v1)
+  _lib/db/                 #   sqlite + postgres drivers, sqlite→postgres translation
+  _lib/storage/            #   local disk + Supabase Storage (signed uploads, CDN URLs)
+  _lib/runtime.js          #   Node req/res adapter shared by Express/Vercel/Netlify
+  _lib/multipart.js        #   streaming uploads (busboy)
+  index.js                 #   Vercel function entry point
 server/
-  db.js                  # SQLite schema, single-admin bootstrap, Artist of the Month
-  index.js               # Express: auth, user, admin, public, /api/v1, range streaming
-  generateMedia.js       # Branding asset generation (no demo content)
+  index.js                 # Express host: static site, SPA fallback, listener
+  generateMedia.js         # Branding asset generation (no demo content)
   uploads/  data/
-supabase/
-  schema.sql             # Postgres schema, indexes, RLS, storage bucket
-  functions/api/index.ts # Full serverless API (same routes, PBKDF2 + JWT, Storage uploads)
+netlify/functions/api.mjs  # Netlify function entry point
+deploy/vps-setup.sh        # Node + nginx + systemd + HTTPS bootstrap for a VPS
+Dockerfile                 # single image: API + built site + /data volume
+supabase/schema.sql        # Postgres schema, indexes, RLS, storage bucket
 src/
-  App.jsx                # Router with protected / admin-only / public-only guards
-  lib/apiBase.js         # VITE_API_BASE_URL resolution for static hosting
-  context/AppContext.jsx # auth, theme, toasts, branding, global player
-  components/            # DashboardLayout, UI kit, GlobalPlayer, badges, media synth
+  App.jsx                  # Router with protected / admin-only / public-only guards
+  lib/apiBase.js           # VITE_API_BASE_URL resolution for split hosting
+  lib/uploads.js           # picks multipart vs direct-to-storage automatically
+  context/AppContext.jsx   # auth, theme, toasts, branding, global player
+  components/              # DashboardLayout, UI kit, GlobalPlayer, badges
   pages/
     LandingPage.jsx  AuthPages.jsx
     user/UserPanel.jsx
     admin/AdminPanel.jsx  SongDetails.jsx  UserManagement.jsx
     admin/ApiKeyManagement.jsx  PlatformSettings.jsx
 scripts/
-  dom-smoke.cjs          # renders every route in jsdom against the live server
-  ui-interactions.cjs    # clicks through filters, modals and the API playground
+  api-test.cjs             # 46 end-to-end API checks (sqlite or postgres)
+  api-serverless-test.cjs  # 28 checks for signed uploads + CDN redirects
+  dom-smoke.cjs            # renders every route in jsdom against the live server
+  ui-interactions.cjs      # clicks through filters, modals and the API playground
 ```
 
 ---
@@ -186,12 +215,19 @@ scripts/
 - API keys are 144-bit random, prefixed `zks_live_`, revocable and usage-counted.
 - Password reset codes are never returned by the API — they are logged server-side only.
 - `JWT_SECRET` is required in production; `ALLOWED_ORIGIN` narrows CORS when set.
+- On serverless, media bytes never pass through the API: browsers PUT to a
+  short-lived signed URL scoped to one object and one folder, and deletes use the
+  service-role key (never the anon key).
 
 ## 🧪 Verification
 
 ```bash
+npm test                 # 46 checks on SQLite + 46 on Postgres + 28 serverless checks
 npm run build            # production bundle
-npm run smoke:build      # bundle the client for jsdom
-npm run smoke -- / /login /admin/dashboard /admin/songs /admin/users /user/dashboard
+npm run smoke            # render every route in jsdom (needs `npm run dev` running)
 npm run smoke:ui         # interaction suite (self-provisions and cleans up fixtures)
 ```
+
+`npm run test:api:pg` replays the entire API suite against a real in-process
+Postgres (PGlite), so the queries the Vercel/Netlify deployments run are covered
+without needing a cloud database.

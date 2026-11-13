@@ -4,7 +4,7 @@ services:
     name: zk-song
     runtime: docker
     plan: starter
-    healthCheckPath: /api/public/bootstrap
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
@@ -12,6 +12,8 @@ services:
         value: 4000
       - key: DATA_DIR
         value: /data
+      - key: UPLOADS_DIR
+        value: /data/uploads
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD

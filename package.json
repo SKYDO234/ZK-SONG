@@ -11,23 +11,28 @@
     "start": "NODE_ENV=production node --no-warnings server/index.js",
     "smoke": "node scripts/dom-smoke.cjs",
     "smoke:build": "npx esbuild src/main.jsx --bundle --format=iife --loader:.jsx=jsx --loader:.css=empty --define:process.env.NODE_ENV='\"production\"' --outfile=/tmp/client.js --log-level=error",
-    "smoke:ui": "node scripts/ui-interactions.cjs"
+    "smoke:ui": "node scripts/ui-interactions.cjs",
+    "test:api": "node --no-warnings scripts/api-test.cjs",
+    "test:api:pg": "ZK_TEST_PG=pglite node --no-warnings scripts/api-test.cjs",
+    "test:serverless": "node --no-warnings scripts/api-serverless-test.cjs",
+    "test": "npm run test:api && npm run test:api:pg && npm run test:serverless"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "busboy": "^1.6.0",
     "clsx": "^2.1.1",
-    "cors": "^2.8.5",
     "express": "^4.21.1",
     "framer-motion": "^11.11.17",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.460.0",
-    "multer": "^1.4.5-lts.1",
+    "pg": "^8.23.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0",
     "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",

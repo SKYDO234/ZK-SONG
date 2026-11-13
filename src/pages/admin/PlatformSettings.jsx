@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { uploadAsset } from '../../lib/uploads';
 import {
   Save,
   Image as ImageIcon,
@@ -69,13 +70,29 @@ export default function PlatformSettings() {
     e?.preventDefault();
     setSaving(true);
     try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => {
-        if (v !== undefined && v !== null) fd.append(k, String(v));
-      });
-      if (logoFile) fd.append('logo', logoFile);
+      // The logo follows the same transport rules as song audio: multipart on a
+      // self-hosted server, direct-to-storage on Vercel/Netlify.
+      let body;
+      if (logoFile) {
+        const uploaded = await uploadAsset({ authFetch, file: logoFile, field: 'logo' });
+        if (uploaded.direct) {
+          body = JSON.stringify({ ...form, logo_key: uploaded.key });
+        } else {
+          const fd = new FormData();
+          Object.entries(form).forEach(([k, v]) => {
+            if (v !== undefined && v !== null) fd.append(k, String(v));
+          });
+          fd.append('logo', logoFile);
+          body = fd;
+        }
+      } else {
+        body = JSON.stringify(form);
+      }
 
-      const res = await authFetch('/api/admin/settings', { method: 'PUT', body: fd });
+      const res = await authFetch('/api/admin/settings', {
+        method: 'PUT',
+        ...(body instanceof FormData ? { body } : { headers: { 'Content-Type': 'application/json' }, body }),
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to save settings');
       setSettings(json.settings);

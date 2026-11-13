@@ -1,11 +1,20 @@
 -- ============================================================================
 -- ZK-SONG — Supabase (Postgres) schema
--- Run this once in the Supabase SQL editor, then deploy the edge function.
--- The single administrator row is created from ADMIN_EMAIL / ADMIN_PASSWORD
--- by the edge function on first boot (see api/index.ts), never by SQL.
+--
+-- Only needed when you use the serverless shapes (Vercel / Netlify). A VPS
+-- deployment creates its SQLite schema automatically and needs none of this.
+--
+--   1. Run this file once in the Supabase SQL editor (or `supabase db push`).
+--   2. Point DATABASE_URL / SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY at the
+--      project and deploy the API (DEPLOYMENT.md, shapes B and C).
+--
+-- The single administrator row is created by the API on first boot from
+-- ADMIN_EMAIL / ADMIN_PASSWORD, never by SQL. The API applies the same DDL
+-- itself via `create table if not exists`, so running this file is optional —
+-- it exists so you can inspect and pre-create everything up front.
 -- ============================================================================
 
-create extension if not exists "pgcrypto";
+-- gen_random_uuid() is core since Postgres 13; no pgcrypto needed.
 
 -- ---------------------------------------------------------------- settings
 create table if not exists public.settings (

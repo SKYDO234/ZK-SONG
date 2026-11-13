@@ -31,7 +31,8 @@ import {
   FileAudio,
   AlertTriangle,
 } from 'lucide-react';
-import { mediaUrl } from '../../lib/apiBase';
+import { mediaUrl, withApiBase } from '../../lib/apiBase';
+import { uploadAsset } from '../../lib/uploads';
 import { monogramAvatar } from '../../components/avatar';
 import { useApp } from '../../context/AppContext';
 import DashboardLayout from '../../components/DashboardLayout';
@@ -969,27 +970,84 @@ export function UploadSong() {
     setUploading(true);
     setProgress(0);
     try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v ?? ''));
-      fd.append('duration', String(durationSec || 14));
       const mins = Math.floor((durationSec || 14) / 60);
       const secs = String((durationSec || 14) % 60).padStart(2, '0');
-      fd.append('duration_formatted', `${mins}:${secs}`);
-      fd.append('audio', audioFile);
-      fd.append('thumbnail', thumbFile);
-      if (videoFile) fd.append('video', videoFile);
+      const meta = {
+        ...form,
+        duration: String(durationSec || 14),
+        duration_formatted: `${mins}:${secs}`,
+      };
+
+      // Serverless deployments cannot receive large request bodies, so audio is
+      // uploaded straight to object storage first and only the key is posted.
+      const sent = {};
+      const files = { audio: audioFile, thumbnail: thumbFile, video: videoFile };
+      const weights = { audio: 80, thumbnail: 12, video: 8 };
+      const totalWeight = Object.entries(files).reduce(
+        (sum, [key, file]) => sum + (file ? weights[key] : 0),
+        0
+      );
+      let doneWeight = 0;
+      const bump = (key, pct) => {
+        if (!weights[key]) return;
+        const overall = totalWeight
+          ? Math.round(((doneWeight + (pct / 100) * weights[key]) / totalWeight) * 100)
+          : 0;
+        setProgress(Math.min(99, overall));
+      };
+
+      for (const [key, file] of Object.entries(files)) {
+        if (!file) continue;
+        const result = await uploadAsset({
+          authFetch,
+          file,
+          field: key,
+          onProgress: (pct) => bump(key, pct),
+        });
+        if (result.direct && result.key) {
+          sent[`${key}_key`] = result.key;
+        } else {
+          sent[`__file_${key}`] = file;
+        }
+        doneWeight += weights[key];
+      }
+
+      const directMode = Object.keys(sent).some((k) => k.endsWith('_key'));
+      setProgress(96);
 
       const token = localStorage.getItem('zksong_token');
       const res = await new Promise((resolve, reject) => {
+        if (directMode) {
+          // Metadata only — a few KB, safe for the 4.5 MB function limit.
+          fetch(withApiBase('/api/user/songs'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ ...meta, ...sent }),
+          })
+            .then(async (r) => resolve({ ok: r.ok, json: await r.json().catch(() => ({})) }))
+            .catch(reject);
+          return;
+        }
+
+        const fd = new FormData();
+        Object.entries(meta).forEach(([k, v]) => fd.append(k, v ?? ''));
+        Object.entries(sent).forEach(([k, file]) => fd.append(k, file));
+
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/user/songs');
+        xhr.open('POST', withApiBase('/api/user/songs'));
         xhr.setRequestHeader('Authorization', `Bearer ${token}`);
         xhr.upload.onprogress = (evt) => {
           if (evt.lengthComputable) setProgress(Math.round((evt.loaded / evt.total) * 100));
         };
         xhr.onload = () => {
           try {
-            resolve({ ok: xhr.status >= 200 && xhr.status < 300, json: JSON.parse(xhr.responseText || '{}') });
+            resolve({
+              ok: xhr.status >= 200 && xhr.status < 300,
+              json: JSON.parse(xhr.responseText || '{}'),
+            });
           } catch (err) {
             reject(new Error('Invalid server response'));
           }
@@ -999,6 +1057,7 @@ export function UploadSong() {
       });
 
       if (!res.ok) throw new Error(res.json.error || 'Upload failed');
+      setProgress(100);
       notify(res.json.message, 'success');
       await refreshBootstrap();
       navigate('/user/songs');
@@ -1436,10 +1495,29 @@ export function AccountManagement() {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      const fd = new FormData();
-      Object.entries(profile).forEach(([k, v]) => fd.append(k, v ?? ''));
-      if (avatarFile) fd.append('avatar', avatarFile);
-      const res = await authFetch('/api/user/account', { method: 'PUT', body: fd });
+      let avatarKey = null;
+      if (avatarFile) {
+        const uploaded = await uploadAsset({ authFetch, file: avatarFile, field: 'avatar' });
+        if (uploaded.direct) avatarKey = uploaded.key;
+        else {
+          const fd = new FormData();
+          Object.entries(profile).forEach(([k, v]) => fd.append(k, v ?? ''));
+          fd.append('avatar', avatarFile);
+          const res = await authFetch('/api/user/account', { method: 'PUT', body: fd });
+          const json = await res.json();
+          if (!res.ok) throw new Error(json.error || 'Update failed');
+          setUser(json.user);
+          setAvatarFile(null);
+          notify(json.message, 'success');
+          refreshUser();
+          return;
+        }
+      }
+      const res = await authFetch('/api/user/account', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...profile, ...(avatarKey ? { avatar_key: avatarKey } : {}) }),
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Update failed');
       setUser(json.user);
