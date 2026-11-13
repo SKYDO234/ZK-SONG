@@ -13,9 +13,22 @@
 //   ADMIN_EMAIL / ADMIN_PASSWORD
 // ============================================================================
 
-import { handleNodeRequest } from '../api/_lib/runtime.js';
+import { handleNodeRequest, buildDiagnostics } from '../api/_lib/runtime.js';
 
 export default async function handler(req, res) {
+  // /api/diagnose must work even when the API cannot boot, so it is answered
+  // before the shared router (which needs a live database) is involved.
+  const pathname = (req.url || '').split('?')[0];
+  if (pathname === '/api/diagnose' && (req.method === 'GET' || req.method === 'HEAD')) {
+    const report = await buildDiagnostics();
+    const payload = JSON.stringify(report, null, 2);
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.end(payload);
+    return;
+  }
+
   // Vercel rewrites preserve the original /api/... path, so no prefix stripping.
   const result = await handleNodeRequest(req, res, { prefix: '' });
   if (!result.handled) {

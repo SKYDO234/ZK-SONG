@@ -78,6 +78,43 @@ function AuthShell({ title, subtitle, children }) {
   );
 }
 
+/**
+ * Error card for the auth forms.
+ *
+ * A boot failure carries a code, a detail and remedy steps. Showing only the
+ * headline ("The API could not start.") hides exactly the information the
+ * person needs, so render all of it.
+ */
+function AuthError({ error }) {
+  if (!error) return null;
+  const detail = typeof error === 'object' ? error.detail : '';
+  const steps = (typeof error === 'object' && Array.isArray(error.steps)) ? error.steps : [];
+  const targetLine = typeof error === 'object' ? error.targetLine : '';
+  const message = typeof error === 'object' ? error.message : String(error);
+
+  return (
+    <div className="mt-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 px-3.5 py-3 space-y-2">
+      <p className="text-rose-300 text-xs font-extrabold flex items-start gap-2">
+        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+        <span>{message}</span>
+      </p>
+      {detail && (
+        <p className="text-[11px] leading-relaxed text-rose-200/80 pl-6">{detail}</p>
+      )}
+      {steps.length > 0 && (
+        <ol className="pl-9 list-decimal space-y-1 text-[11px] text-rose-200/70">
+          {steps.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+      )}
+      {targetLine && (
+        <p className="pl-6 text-[10px] font-mono text-rose-200/50 break-all">{targetLine}</p>
+      )}
+    </div>
+  );
+}
+
 export function LoginPage() {
   const { loginWithCredentials, settings } = useApp();
   const navigate = useNavigate();
@@ -100,7 +137,7 @@ export function LoginPage() {
         navigate('/user/dashboard');
       }
     } catch (err) {
-      setError(err.message);
+      setError(err);
     } finally {
       setLoading(false);
     }
@@ -111,12 +148,7 @@ export function LoginPage() {
       title={`Sign in to ${settings.site_name}`}
       subtitle="Access your Artist Studio Panel or Administrator Command Center"
     >
-      {error && (
-        <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs font-semibold flex items-start gap-2.5">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>{error}</span>
-        </div>
-      )}
+            {error && <AuthError error={error} />}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -219,7 +251,7 @@ export function RegisterPage() {
       await registerAccount(form);
       navigate('/user/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err);
     } finally {
       setLoading(false);
     }
@@ -402,7 +434,7 @@ export function ForgotPasswordPage() {
       setStep(2);
       notify(data.message, 'info');
     } catch (err) {
-      setError(err.message);
+      setError(err);
     } finally {
       setLoading(false);
     }
@@ -431,7 +463,7 @@ export function ForgotPasswordPage() {
       notify(data.message, 'success');
       navigate('/login');
     } catch (err) {
-      setError(err.message);
+      setError(err);
     } finally {
       setLoading(false);
     }

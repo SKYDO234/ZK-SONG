@@ -17,11 +17,18 @@ import { pipeline } from 'node:stream/promises';
 const BODY_LIMIT = 32 * 1024 * 1024; // JSON metadata only; files never come this way
 
 let ready = null;
+/** Last boot failure, kept so /api/health can explain it on demand. */
+let lastBootFailure = null;
+
+export function getLastBootFailure() {
+  return lastBootFailure;
+}
 
 /** Boot the API once per process (pool + schema + admin). */
 export async function getApi() {
   if (!ready) {
     ready = (async () => {
+      lastBootFailure = null;
       const db = await getStore();
       const storage = getStorage();
       return createApi({ db, storage });
@@ -172,6 +179,59 @@ export function dbTargetSummary(env = process.env) {
   } catch {
     return { error: 'DATABASE_URL is not a valid URL.' };
   }
+}
+
+/**
+ * Full deployment diagnosis as JSON. Always answers 200 with a report — the
+ * point is to explain a broken deployment, so it must not depend on the thing
+ * that is broken.
+ */
+export async function buildDiagnostics(env = process.env) {
+  const config = diagnoseConfig(env);
+  const target = dbTargetSummary(env);
+  const report = {
+    ok: config.ok && !lastBootFailure,
+    time: new Date().toISOString(),
+    platform: {
+      vercel: Boolean(env.VERCEL),
+      netlify: Boolean(env.NETLIFY),
+      lambda: Boolean(env.AWS_LAMBDA_FUNCTION_NAME),
+    },
+    variables: {
+      DATABASE_URL: Boolean(env.DATABASE_URL || env.POSTGRES_URL),
+      SUPABASE_URL: Boolean(env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL),
+      SUPABASE_SERVICE_ROLE_KEY: Boolean(env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY),
+      JWT_SECRET: Boolean(env.JWT_SECRET || env.APP_JWT_SECRET),
+      ADMIN_PASSWORD: Boolean(env.ADMIN_PASSWORD),
+      SUPABASE_BUCKET: env.SUPABASE_BUCKET || 'media',
+    },
+    ...(target ? { database_target: target } : {}),
+    missing: config.missing,
+    warnings: config.warnings,
+    boot_failure: lastBootFailure,
+    credential_recovery: globalThis.__zksongCredentialRecovery || null,
+  };
+
+  // Live check, bounded so a hanging host cannot stall the report.
+  if (env.DATABASE_URL || env.POSTGRES_URL) {
+    try {
+      const db = await Promise.race([
+        getStore(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
+      ]);
+      report.database = { reachable: true, dialect: db.dialect };
+      const row = await db.get('select count(*) as c from users');
+      report.database.users = Number(row?.c ?? 0);
+    } catch (err) {
+      report.database = {
+        reachable: false,
+        reason: err?.reason || err?.code || 'unknown',
+        message: String(err?.message || err).slice(0, 300),
+      };
+    }
+  }
+
+  return report;
 }
 
 /**
@@ -332,6 +392,7 @@ export async function handleNodeRequest(req, res, { prefix = '', env = process.e
     // error page — which the browser then fails to JSON.parse, hiding the real
     // cause behind "Unexpected token 'A'". Answer with JSON instead.
     const reason = describeBootFailure(err);
+    lastBootFailure = reason;
     const config = diagnoseConfig(env);
     console.error('[ZK-SONG] API boot failed:', err);
     if (!res.headersSent) {

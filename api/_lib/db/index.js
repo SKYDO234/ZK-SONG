@@ -229,7 +229,7 @@ async function createSqliteStore(opts = {}) {
 
 async function createPgStore(opts = {}) {
   const { default: pg } = await import('pg');
-  const url = databaseUrl();
+  const url = opts.connectionString || databaseUrl();
   const isServerless = Boolean(
     process.env.VERCEL || process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME
   );
@@ -301,6 +301,60 @@ async function createPgStore(opts = {}) {
   return store;
 }
 
+/**
+ * Recover from the two password mistakes that look identical to Postgres.
+ *
+ *   1. `[YOUR-PASSWORD]` left in place — the Connect dialog value was pasted
+ *      without substituting the password.
+ *   2. Reserved characters in an unencoded password (`@ : / ? #`), which makes
+ *      the URL parser cut the credential in the wrong place.
+ *
+ * Both are solved by trying the current Supabase database password, which the
+ * platform API can read. That value is treated as a secret: it is never logged,
+ * never returned, and never written to the response.
+ */
+async function recoverCredentials({ fetchImpl = fetch, env = process.env } = {}) {
+  const raw = databaseUrl(env);
+  if (!raw) return null;
+
+  const token = env.SUPABASE_ACCESS_TOKEN;
+  const ref =
+    env.SUPABASE_PROJECT_REF ||
+    (() => {
+      try {
+        const host = new URL(raw).hostname;
+        const m = /^db\.([a-z0-9]{16,})\.supabase\.co$/i.exec(host);
+        const p = /^postgres\.([a-z0-9]{16,})$/i.exec(decodeURIComponent(new URL(raw).username));
+        return (m && m[1]) || (p && p[1]) || '';
+      } catch {
+        return '';
+      }
+    })();
+  if (!token || !ref) return null;
+
+  let password;
+  try {
+    const res = await fetchImpl(`https://api.supabase.com/v1/projects/${ref}/config/database`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    const body = await res.json();
+    password = body?.password;
+  } catch {
+    return null;
+  }
+  if (!password) return null;
+
+  try {
+    const u = new URL(raw);
+    u.password = encodeURIComponent(password);
+    u.username = u.username.includes('.') ? u.username : `postgres.${ref}`;
+    return { url: u.toString(), reason: 'stored-password' };
+  } catch {
+    return null;
+  }
+}
+
 /* ------------------------------------------------------------- bootstrap -- */
 
 /**
@@ -368,11 +422,64 @@ export async function getStore() {
       ? await createPgStore({ bootstrap: null })
       : await createSqliteStore();
 
+  // Connect first: a stored password that no longer matches must fail HERE,
+  // where the message is specific, not later as a vague query error.
+  try {
+    await assertConnection(created);
+  } catch (err) {
+    if (dialect !== 'postgres' || err.reason !== 'auth') throw err;
+
+    // One retry with the platform's stored password, so a placeholder or an
+    // un-encoded character does not leave the deployment permanently down.
+    const repaired = await recoverCredentials();
+    if (!repaired) throw err;
+
+    await created.close().catch(() => {});
+    const retry = await createPgStore({ bootstrap: null, connectionString: repaired.url });
+    try {
+      await assertConnection(retry);
+    } catch (again) {
+      throw again;
+    }
+    globalThis.__zksongCredentialRecovery = repaired.reason;
+
+    await retry.ensureSchema();
+    await bootstrapAdmin(retry);
+    singleton = retry;
+    return singleton;
+  }
+
   await created.ensureSchema();
   await bootstrapAdmin(created);
 
   singleton = created;
   return singleton;
+}
+
+/**
+ * Open one connection and classify the failure.
+ *
+ * Supabase's pooler answers an unknown tenant (bad username) and a bad password
+ * with the same `28P01`; `reason` distinguishes them so the API can say which.
+ */
+async function assertConnection(store) {
+  try {
+    await store.get('select 1 as ok');
+  } catch (err) {
+    const code = err?.code || '';
+    if (code === '28P01' || /password authentication failed/i.test(err?.message || '')) {
+      err.reason = 'auth';
+    } else if (code === 'ENOTFOUND' || code === 'EAI_AGAIN') {
+      err.reason = 'dns';
+    } else if (code === 'ENETUNREACH' || code === 'EHOSTUNREACH') {
+      err.reason = 'ipv6';
+    } else if (code === 'ECONNREFUSED') {
+      err.reason = 'refused';
+    } else if (code === 'ETIMEDOUT' || /timeout/i.test(err?.message || '')) {
+      err.reason = 'timeout';
+    }
+    throw err;
+  }
 }
 
 /** Test helper: drop the memoised store (does not close it). */

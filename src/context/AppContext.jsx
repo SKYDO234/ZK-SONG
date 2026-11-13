@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { readJson } from '../lib/http';
+import { describeApiFailure } from '../lib/apiErrors';
 import { withApiBase, mediaUrl } from '../lib/apiBase';
 
 const AppContext = createContext(null);
@@ -152,7 +153,12 @@ export function AppProvider({ children }) {
     });
     const data = await readJson(res);
     if (!res.ok) {
-      throw new Error(data.error || 'Login failed');
+      const failure = describeApiFailure(data, 'Sign in failed.');
+      const err = new Error(failure.title);
+      err.steps = failure.steps;
+      err.detail = failure.detail;
+      err.targetLine = failure.targetLine;
+      throw err;
     }
     localStorage.setItem('zksong_token', data.token);
     setToken(data.token);
@@ -170,7 +176,12 @@ export function AppProvider({ children }) {
     });
     const data = await readJson(res);
     if (!res.ok) {
-      throw new Error(data.error || 'Registration failed');
+      const failure = describeApiFailure(data, 'Could not create the account.');
+      const err = new Error(failure.title);
+      err.steps = failure.steps;
+      err.detail = failure.detail;
+      err.targetLine = failure.targetLine;
+      throw err;
     }
     localStorage.setItem('zksong_token', data.token);
     setToken(data.token);
