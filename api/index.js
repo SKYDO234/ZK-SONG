@@ -19,6 +19,19 @@ export default async function handler(req, res) {
   // /api/diagnose must work even when the API cannot boot, so it is answered
   // before the shared router (which needs a live database) is involved.
   const pathname = (req.url || '').split('?')[0];
+
+  // Reachability probe: measures the TCP handshake to the database host from the
+  // function's own network. Short-circuits nothing else and needs no database.
+  if (pathname === '/api/netprobe' && req.method === 'GET') {
+    const { probeDatabaseHost } = await import('../api/_lib/runtime.js');
+    const report = await probeDatabaseHost();
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.end(JSON.stringify(report, null, 2));
+    return;
+  }
+
   if (pathname === '/api/diagnose' && (req.method === 'GET' || req.method === 'HEAD')) {
     const report = await buildDiagnostics();
     const payload = JSON.stringify(report, null, 2);

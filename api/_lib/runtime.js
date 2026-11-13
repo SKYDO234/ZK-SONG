@@ -154,6 +154,71 @@ function sendFile(req, res, descriptor) {
 }
 
 /**
+ * TCP reachability of the configured database host, from this runtime's network.
+ *
+ * A serverless platform can have no route to a host that resolves fine
+ * elsewhere, and that shows up only as an opaque connect timeout. Measuring the
+ * handshake per address family, and probing the sibling pooler clusters, turns
+ * "no answer" into a specific finding. No credentials involved.
+ */
+export async function probeDatabaseHost(env = process.env) {
+  const net = await import('node:net');
+  const dns = await import('node:dns/promises');
+  const target = dbTargetSummary(env);
+  if (!target || target.error) return { error: 'No usable DATABASE_URL.', target };
+
+  const attempt = (host, port, family, timeoutMs = 6000) =>
+    new Promise((resolve) => {
+      const started = Date.now();
+      const socket = net.createConnection({ host, port: Number(port), family });
+      const done = (result) => {
+        socket.destroy();
+        resolve({ ...result, ms: Date.now() - started });
+      };
+      socket.setTimeout(timeoutMs, () => done({ ok: false, error: 'TIMEOUT' }));
+      socket.once('connect', () => done({ ok: true }));
+      socket.once('error', (err) => done({ ok: false, error: err.code || err.message }));
+    });
+
+  const addresses = await dns.lookup(target.host, { all: true }).catch((err) => [
+    { address: err.code || 'DNS_ERROR', family: 0 },
+  ]);
+  const families = [...new Set(addresses.map((a) => a.family).filter(Boolean))];
+
+  const tcp = {};
+  for (const family of families) {
+    tcp[`ipv${family}`] = await attempt(target.host, target.port, family);
+  }
+
+  // Sibling pooler clusters, in case the configured index is the wrong one.
+  const siblings = [];
+  const m = /^(aws|gcp)-(\d+)(-[a-z0-9-]+)?\.pooler\.supabase\.com$/i.exec(target.host);
+  if (m) {
+    const [, brand, index, region = ''] = m;
+    for (let i = 0; i <= 2; i += 1) {
+      if (i === Number(index)) continue;
+      const host = `${brand}-${i}${region}.pooler.supabase.com`;
+      siblings.push({ host, ...(await attempt(host, target.port, 4)) });
+    }
+  }
+
+  return {
+    runtime: {
+      node: process.version,
+      vercel: Boolean(env.VERCEL),
+      region: env.VERCEL_REGION || null,
+    },
+    target,
+    dns: addresses,
+    tcp,
+    sibling_poolers: siblings,
+    verdict: Object.values(tcp).some((r) => r.ok)
+      ? 'the configured host is reachable from this runtime'
+      : 'the configured host is NOT reachable from this runtime — check the aws-N index or the port',
+  };
+}
+
+/**
  * Describe the connection target WITHOUT its password.
  *
  * `28P01` (password authentication failed) is ambiguous in two ways worth
