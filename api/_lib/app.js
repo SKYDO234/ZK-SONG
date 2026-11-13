@@ -32,6 +32,7 @@ import {
 } from './http.js';
 import { parseMultipart, validateUpload } from './multipart.js';
 import { getStaticRoots } from './paths.js';
+import { diagnoseConfig } from './runtime.js';
 
 const DEFAULT_MAX_UPLOAD_MB = 120;
 
@@ -416,9 +417,21 @@ export function createApi({ db, storage, env = process.env }) {
 
   // NOTE: deliberately no GET / route — the Express host serves the built SPA at
   // the root, and claiming that path here would shadow the website.
-  router.get('/api/health', async () =>
-    json({ status: 'ok', service: 'ZK-SONG API', time: iso(), storage: storage.kind, db: db.dialect })
-  );
+  router.get('/api/health', async () => {
+    // Configuration problems are reported here rather than only on failure, so
+    // one request after a deploy shows everything that still needs setting.
+    const config = diagnoseConfig(env);
+    return json({
+      status: 'ok',
+      service: 'ZK-SONG API',
+      time: iso(),
+      storage: storage.kind,
+      db: db.dialect,
+      ...(config.missing.length || config.warnings.length
+        ? { config_warnings: [...config.missing, ...config.warnings] }
+        : {}),
+    });
+  });
 
   /* --------------------------------------------------- public & bootstrap */
 
