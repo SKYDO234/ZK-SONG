@@ -7,7 +7,11 @@
 // When it is empty the app uses same-origin relative URLs, which is what the
 // bundled Express server (`npm start`) and the Vite dev proxy expect.
 
-export const API_BASE = String(import.meta.env.VITE_API_BASE_URL || '')
+// `import.meta.env` is injected by Vite. Read it defensively so the module also
+// works in bundlers/tests that do not define it (esbuild, jsdom smoke harness).
+const ENV = (import.meta && import.meta.env) || {};
+
+export const API_BASE = String(ENV.VITE_API_BASE_URL || '')
   .trim()
   .replace(/\/+$/, '');
 

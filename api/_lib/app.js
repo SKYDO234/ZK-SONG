@@ -414,8 +414,8 @@ export function createApi({ db, storage, env = process.env }) {
 
   const router = createRouter();
 
-  router.get('/', async () => json({ status: 'ok', service: 'ZK-SONG API', version: 'v1' }));
-
+  // NOTE: deliberately no GET / route — the Express host serves the built SPA at
+  // the root, and claiming that path here would shadow the website.
   router.get('/api/health', async () =>
     json({ status: 'ok', service: 'ZK-SONG API', time: iso(), storage: storage.kind, db: db.dialect })
   );

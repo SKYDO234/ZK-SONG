@@ -1017,26 +1017,38 @@ const { songs, artist_of_the_month } = await response.json();
 
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-white/10 py-10 mt-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-3">
-            <img
-              src={mediaUrl(settings.logo_url) || '/zk-logo.svg'}
-              alt={settings.site_name}
-              className="w-7 h-7 rounded-lg"
-            />
-            <span className="font-bold text-slate-800 dark:text-slate-200">
-              {settings.site_name}
-            </span>
-            <span>— {settings.footer_text}</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-3">
+              <img
+                src={mediaUrl(settings.logo_url) || '/zk-logo.svg'}
+                alt={settings.site_name}
+                className="w-7 h-7 rounded-lg"
+              />
+              <span className="font-bold text-slate-800 dark:text-slate-200">
+                {settings.site_name}
+              </span>
+              <span>— {settings.footer_text}</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span>Contact: {settings.contact_email}</span>
+              <Link to="/login" className="hover:text-violet-400 font-semibold">
+                Login
+              </Link>
+              <Link to="/register" className="hover:text-violet-400 font-semibold">
+                Register
+              </Link>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span>Contact: {settings.contact_email}</span>
-            <Link to="/login" className="hover:text-violet-400 font-semibold">
-              Login
-            </Link>
-            <Link to="/register" className="hover:text-violet-400 font-semibold">
-              Register
-            </Link>
+
+          {/* Studio credit */}
+          <div className="pt-5 border-t border-slate-200/70 dark:border-white/5 text-center sm:text-left">
+            <p className="text-[11px] sm:text-xs font-extrabold tracking-[0.18em] uppercase text-slate-700 dark:text-slate-200">
+              Website by ZK Studio
+            </p>
+            <p className="mt-1.5 text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">
+              CEO &amp; MD — Ziyan Hossain
+            </p>
           </div>
         </div>
       </footer>
