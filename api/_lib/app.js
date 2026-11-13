@@ -13,7 +13,6 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import {
@@ -32,6 +31,7 @@ import {
   unauthorized,
 } from './http.js';
 import { parseMultipart, validateUpload } from './multipart.js';
+import { getStaticRoots } from './paths.js';
 
 const DEFAULT_MAX_UPLOAD_MB = 120;
 
@@ -1744,13 +1744,9 @@ export function createApi({ db, storage, env = process.env }) {
 
 /* ---------------------------------------------------------------- utils -- */
 
-/** Repository root, derived from this file's location (api/_lib/app.js). */
-const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(MODULE_DIR, '..', '..');
-
 /** Where first-party static assets may live (source checkout and built app). */
 function siteRoots() {
-  return [path.join(REPO_ROOT, 'public'), path.join(REPO_ROOT, 'dist')];
+  return getStaticRoots();
 }
 
 /** First-shipped asset for a media key, if one exists (e.g. branding/zk-logo.svg). */
