@@ -122,10 +122,15 @@ export default function LandingPage() {
   const leaderboard = artistOfTheMonth?.leaderboard || [];
 
   return (
-    <div className="min-h-screen pb-28 bg-[#0a0a0b] dark:bg-[#07070c] text-white dark:text-neutral-100">
+    <div className="relative min-h-screen pb-28 bg-[#08080a] text-white">
+      {/* Ambient light: one warm pool behind the hero, one cool pool at the base */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[46rem] overflow-hidden">
+        <div className="absolute left-1/2 top-[-18rem] h-[38rem] w-[52rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(230,194,92,0.13),transparent_66%)] blur-[10px]" />
+        <div className="absolute inset-0 grid-dots opacity-[0.35] [mask-image:radial-gradient(ellipse_at_50%_0%,black,transparent_72%)]" />
+      </div>
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 border-b border-white/10/80 dark:border-white/10 bg-[#070708]/90 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#08080a]/75 backdrop-blur-2xl">
+        <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-3 group">
             <img
               src={mediaUrl(settings.logo_url) || '/zk-logo.svg'}
@@ -134,37 +139,35 @@ export default function LandingPage() {
             />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-amber-500 via-amber-400 to-amber-400 dark:from-white dark:via-amber-100 dark:to-amber-200 bg-clip-text text-transparent">
+                <span className="font-display text-[1.05rem] font-semibold tracking-tight text-white">
                   {settings.site_name}
                 </span>
-                <span className="hidden sm:inline-block text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-500 dark:text-amber-200 border border-amber-400/30">
+                <span className="chip hidden px-2 py-0.5 sm:inline-flex">
                   {settings.accent_badge_text || 'STUDIO v2.6'}
                 </span>
               </div>
-              <p className="text-[11px] text-neutral-400 dark:text-neutral-400 hidden sm:block truncate max-w-xs">
+              <p className="hidden max-w-xs truncate text-[11px] text-neutral-500 sm:block">
                 {settings.site_tagline}
               </p>
             </div>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-neutral-300 dark:text-neutral-300">
-            <a href="#artist-of-month" className="hover:text-amber-400 transition-colors flex items-center gap-1.5">
-              <Crown className="w-4 h-4 text-amber-400" />
+          <nav className="hidden items-center gap-8 text-[13px] font-medium text-neutral-400 lg:flex">
+            <a href="#artist-of-month" className="transition-colors hover:text-white">
               Artist of the Month
             </a>
-            <a href="#catalog" className="hover:text-amber-400 transition-colors">
-              Approved Songs
+            <a href="#catalog" className="transition-colors hover:text-white">
+              Catalogue
             </a>
-            <a href="#external-api" className="hover:text-amber-400 transition-colors flex items-center gap-1.5">
-              <KeyRound className="w-4 h-4 text-amber-300" />
-              REST API
+            <a href="#external-api" className="transition-colors hover:text-white">
+              API
             </a>
           </nav>
 
           <div className="flex items-center gap-2.5">
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl border border-white/10 dark:border-white/10 bg-white/[0.04] dark:bg-white/[0.05] text-neutral-200 dark:text-neutral-200 hover:border-amber-400/40 transition-all"
+              className="btn-ink h-10 w-10 p-0"
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
@@ -175,14 +178,14 @@ export default function LandingPage() {
                 {user.role === 'admin' && (
                   <Link
                     to="/admin/dashboard"
-                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-neutral-950 font-extrabold text-xs sm:text-sm transition-all"
+                    className="btn-ink px-4 py-2.5 text-xs sm:text-[13px]"
                   >
                     Admin Panel
                   </Link>
                 )}
                 <Link
                   to="/user/dashboard"
-                  className="px-4 py-2.5 rounded-xl btn-gold font-bold text-xs sm:text-sm transition-all"
+                  className="btn-ink px-4 py-2.5 text-xs sm:text-[13px]"
                 >
                   User Panel
                 </Link>
@@ -191,13 +194,13 @@ export default function LandingPage() {
               <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="px-4 py-2.5 rounded-xl border border-white/15 dark:border-white/15 hover:bg-white/[0.06] dark:hover:bg-white/10 text-xs sm:text-sm font-bold transition-all"
+                  className="btn-ghost px-3 text-xs sm:text-[13px]"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/register"
-                  className="px-4 py-2.5 rounded-xl btn-gold text-xs sm:text-sm font-bold transition-all"
+                  className="btn-gold px-4 py-2.5 text-xs sm:text-[13px]"
                 >
                   Start Uploading
                 </Link>
@@ -215,59 +218,67 @@ export default function LandingPage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
           <div className="grid lg:grid-cols-12 gap-10 items-center">
-            <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-500 dark:text-amber-200 text-xs font-bold">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Complete Artist Publishing, A&R Moderation & External Music REST API</span>
-              </div>
+            <div className="lg:col-span-7">
+              <p className="eyebrow flex items-center gap-2">
+                <span className="inline-block h-1 w-1 rounded-full bg-gold-300" />
+                Independent music infrastructure
+              </p>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08]">
-                Publish Studio Music.{' '}
-                <span className="bg-gradient-to-r from-amber-400 via-amber-400 to-amber-300 bg-clip-text text-transparent">
-                  Stream Everywhere.
-                </span>
+              <h1 className="mt-6 font-display text-[2.6rem] font-semibold leading-[1.02] tracking-tightest text-white text-balance sm:text-6xl lg:text-[4.15rem]">
+                Publish the record.
+                <br />
+                <span className="accent-serif text-gold">Own the catalogue.</span>
               </h1>
 
-              <p className="text-base sm:text-lg text-neutral-300 dark:text-neutral-300 max-w-2xl leading-relaxed">
+              <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-neutral-400 text-pretty sm:text-base">
                 {settings.site_description}
               </p>
 
-              {/* Main CTA Buttons */}
-              <div className="flex flex-wrap items-center gap-3.5 pt-1">
+              <div className="mt-9 flex flex-wrap items-center gap-3">
                 <Link
                   to={user ? '/user/upload' : '/register'}
-                  className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl btn-gold font-extrabold text-sm transition-all hover:-translate-y-0.5"
+                  className="btn-gold px-6 py-3.5 text-sm"
                 >
-                  <UploadCloud className="w-5 h-5" />
-                  <span>{user ? 'Upload a New Song' : 'Create Artist Account'}</span>
+                  <UploadCloud className="h-4 w-4" />
+                  {user ? 'Upload a new song' : 'Create artist account'}
                 </Link>
 
-                <a
-                  href="#catalog"
-                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-white dark:bg-white/10 hover:bg-white/[0.06] dark:hover:bg-white/15 border border-white/10 dark:border-white/15 font-bold text-sm transition-all"
-                >
-                  <Headphones className="w-4 h-4 text-amber-300" />
-                  <span>Listen to Approved Catalog</span>
+                <a href="#catalog" className="btn-ink px-5 py-3.5 text-sm">
+                  <Headphones className="h-4 w-4 text-neutral-400" />
+                  Hear the catalogue
                 </a>
 
-                <a
-                  href="#external-api"
-                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-amber-600 dark:text-amber-200 font-bold text-sm transition-all"
-                >
-                  <Terminal className="w-4 h-4" />
-                  <span>Live REST API</span>
+                <a href="#external-api" className="btn-ghost px-2 py-3.5 text-sm">
+                  <Terminal className="h-4 w-4" />
+                  Read the API
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </a>
               </div>
 
+              {/* Facts, not badges: quieter and more credible than three pills. */}
+              <dl className="mt-12 grid max-w-lg grid-cols-3 gap-px overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.02]">
+                {[
+                  ['Artists', publicStats?.artists_count ?? '—'],
+                  ['Approved', publicStats?.approved_songs ?? publicSongs.length],
+                  ['Plays', publicStats?.total_plays ?? '—'],
+                ].map(([label, value]) => (
+                  <div key={label} className="px-4 py-4">
+                    <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                      {label}
+                    </dt>
+                    <dd className="mono-data mt-1.5 text-lg text-white">{value}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
 
             {/* Hero Right Featured Player Card */}
             <div className="lg:col-span-5">
-              <div className="relative rounded-3xl p-6 bg-gradient-to-br from-slate-900 via-[#121124] to-slate-950 text-white border border-white/15 shadow-2xl">
+              <div className="surface-lift relative rounded-[1.75rem] p-5 text-white">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-200 bg-amber-400/15 border border-amber-400/30 px-3 py-1 rounded-full">
-                    <Radio className="w-3.5 h-3.5 animate-pulse" />
-                    Featured Studio Master
+                  <span className="eyebrow flex items-center gap-1.5">
+                    <Radio className="h-3 w-3 animate-pulse text-gold-300" />
+                    Featured master
                   </span>
                   {winner && (
                     <ArtistOfMonthBadge
@@ -290,7 +301,7 @@ export default function LandingPage() {
                           <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-400/80 text-white">
                             {publicSongs[0].genre}
                           </span>
-                          <h3 className="text-xl font-black mt-1.5">{publicSongs[0].title}</h3>
+                          <h3 className="text-xl font-semibold mt-1.5">{publicSongs[0].title}</h3>
                           <p className="text-xs text-neutral-300">{publicSongs[0].artist}</p>
                         </div>
                         <button
@@ -392,7 +403,7 @@ export default function LandingPage() {
                 key={i}
                 className="p-5 rounded-2xl bg-[#101013]/70 border border-white/10/80 dark:border-white/10 shadow-sm"
               >
-                <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-amber-500 to-amber-400 dark:from-amber-200 dark:to-amber-200 bg-clip-text text-transparent">
+                <div className="font-display text-2xl font-semibold sm:text-3xl bg-gradient-to-r from-amber-500 to-amber-400 dark:from-amber-200 dark:to-amber-200 bg-clip-text text-transparent">
                   {item.value}
                 </div>
                 <div className="text-sm font-bold text-neutral-100 dark:text-neutral-100 mt-1">
@@ -409,9 +420,9 @@ export default function LandingPage() {
           ARTIST OF THE MONTH SPOTLIGHT SECTION (AUTOMATICALLY CALCULATED)
          ==================================================================== */}
       {winner && (
-        <section id="artist-of-month" className="py-16 border-b border-white/10/70 dark:border-white/10">
+        <section id="artist-of-month" className="relative border-t border-white/[0.06] py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="rounded-3xl p-6 sm:p-10 bg-gradient-to-br from-slate-900 via-[#17132e] to-slate-950 text-white border border-amber-400/30 shadow-2xl relative overflow-hidden">
+            <div className="surface-gold relative overflow-hidden rounded-[1.75rem] p-6 text-white sm:p-10">
               <div className="pointer-events-none absolute -right-20 -top-20 w-80 h-80 rounded-full bg-amber-500/15 blur-[100px]" />
 
               <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
@@ -421,7 +432,7 @@ export default function LandingPage() {
                     monthLabel={artistOfTheMonth.month_label}
                     approvedCount={winner.monthly_approved_count}
                   />
-                  <h2 className="text-2xl sm:text-4xl font-black mt-3">
+                  <h2 className="text-2xl sm:text-4xl font-semibold mt-3">
                     {winner.name} — {artistOfTheMonth.month_label} Spotlight
                   </h2>
                   <p className="text-sm text-neutral-300 mt-1">
@@ -432,7 +443,7 @@ export default function LandingPage() {
 
                 <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-5 py-3">
                   <div className="text-center">
-                    <div className="text-2xl font-black text-amber-300">
+                    <div className="text-2xl font-semibold text-amber-300">
                       {winner.monthly_approved_count}
                     </div>
                     <div className="text-[11px] text-neutral-400 uppercase font-bold">
@@ -441,7 +452,7 @@ export default function LandingPage() {
                   </div>
                   <div className="h-8 w-px bg-white/15" />
                   <div className="text-center">
-                    <div className="text-2xl font-black text-amber-200">
+                    <div className="text-2xl font-semibold text-amber-200">
                       {(winner.monthly_plays || 0).toLocaleString()}
                     </div>
                     <div className="text-[11px] text-neutral-400 uppercase font-bold">
@@ -462,7 +473,7 @@ export default function LandingPage() {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-xl font-extrabold">{winner.name}</h3>
+                        <h3 className="text-xl font-semibold">{winner.name}</h3>
                         <ArtistOfMonthBadge size="sm" />
                         <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-neutral-200 font-semibold">
                           {winner.primary_genre} • {winner.country}
@@ -475,7 +486,7 @@ export default function LandingPage() {
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-300 mb-3">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-300 mb-3">
                       Approved Tracks by {winner.name} ({winner.approved_songs?.length || 0})
                     </h4>
                     <div className="grid sm:grid-cols-2 gap-3">
@@ -518,7 +529,7 @@ export default function LandingPage() {
                 {/* Monthly Artist Leaderboard */}
                 <div className="lg:col-span-4 rounded-2xl p-5 bg-black/40 border border-white/10 space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-neutral-300 flex items-center gap-1.5">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-300 flex items-center gap-1.5">
                       <Crown className="w-4 h-4 text-amber-400" />
                       {artistOfTheMonth.month_label} Standings
                     </h4>
@@ -536,7 +547,7 @@ export default function LandingPage() {
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <span
-                            className={`w-6 h-6 rounded-full text-xs font-black flex items-center justify-center shrink-0 ${
+                            className={`w-6 h-6 rounded-full text-xs font-semibold flex items-center justify-center shrink-0 ${
                               entry.rank === 1
                                 ? 'bg-amber-400 text-neutral-950'
                                 : 'bg-white/10 text-neutral-300'
@@ -558,7 +569,7 @@ export default function LandingPage() {
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="text-sm font-extrabold text-amber-300">
+                          <div className="text-sm font-semibold text-amber-300">
                             {entry.monthly_approved_count} Approved
                           </div>
                           <div className="text-[10px] text-neutral-400">
@@ -578,14 +589,14 @@ export default function LandingPage() {
       {/* ====================================================================
           APPROVED SONGS CATALOG SECTION
          ==================================================================== */}
-      <section id="catalog" className="py-16 border-b border-white/10/70 dark:border-white/10">
+      <section id="catalog" className="border-t border-white/[0.06] py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <span className="text-xs font-extrabold uppercase tracking-widest text-amber-500 dark:text-amber-300">
+              <span className="text-xs font-semibold uppercase tracking-widest text-amber-500 dark:text-amber-300">
                 Curated & Verified Library
               </span>
-              <h2 className="text-3xl font-black mt-1">Approved Songs Catalog</h2>
+              <h2 className="text-3xl font-semibold mt-1">Approved Songs Catalog</h2>
               <p className="text-sm text-neutral-300 dark:text-neutral-400 mt-1">
                 Every track below has passed Admin moderation and is simultaneously available via our External REST API.
               </p>
@@ -664,7 +675,7 @@ export default function LandingPage() {
                           {song.genre}
                         </span>
                         <span
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold backdrop-blur-md ${
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold backdrop-blur-md ${
                             song.is_cover
                               ? 'bg-amber-500/90 text-neutral-950'
                               : 'bg-emerald-500/85 text-neutral-950'
@@ -686,7 +697,7 @@ export default function LandingPage() {
 
                       <div className="absolute bottom-3 inset-x-3 flex items-end justify-between gap-2">
                         <div className="min-w-0">
-                          <h3 className="text-white font-extrabold text-lg leading-tight truncate">
+                          <h3 className="text-white font-semibold text-lg leading-tight truncate">
                             {song.title}
                           </h3>
                           <div className="flex items-center gap-1.5 flex-wrap mt-1">
@@ -771,15 +782,15 @@ export default function LandingPage() {
       {/* ====================================================================
           EXTERNAL REST API SECTION
          ==================================================================== */}
-      <section id="external-api" className="py-16">
+      <section id="external-api" className="border-t border-white/[0.06] py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-500 dark:text-amber-200 text-xs font-extrabold">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-500 dark:text-amber-200 text-xs font-semibold">
                 <KeyRound className="w-3.5 h-3.5" />
                 <span>External Music Application REST API (v1)</span>
               </div>
-              <h2 className="text-3xl font-black mt-2">
+              <h2 className="text-3xl font-semibold mt-2">
                 Connect External Music Apps via API Key
               </h2>
               <p className="text-sm text-neutral-300 dark:text-neutral-400 mt-1 max-w-2xl">
@@ -797,7 +808,7 @@ export default function LandingPage() {
                 <button
                   key={t.id}
                   onClick={() => setSimTab(t.id)}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all ${
+                  className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     simTab === t.id
                       ? 'btn-gold shadow-lg'
                       : 'bg-[#101013] border border-white/10 dark:border-white/10 text-neutral-300 dark:text-neutral-300'
@@ -850,7 +861,7 @@ export default function LandingPage() {
               <button
                 onClick={() => fetchExternalApi(simApiKey, simSearch)}
                 disabled={simLoading}
-                className="px-5 py-2.5 rounded-xl btn-gold font-extrabold text-xs flex items-center justify-center gap-2 shrink-0 shadow-md"
+                className="px-5 py-2.5 rounded-xl btn-gold font-semibold text-xs flex items-center justify-center gap-2 shrink-0 shadow-md"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${simLoading ? 'animate-spin' : ''}`} />
                 <span>Fetch via API Key</span>
@@ -873,12 +884,12 @@ export default function LandingPage() {
               <div className="rounded-2xl bg-[#090d16] text-white border border-emerald-500/30 overflow-hidden shadow-2xl">
                 <div className="px-6 py-4 bg-gradient-to-r from-emerald-950/90 via-slate-900 to-slate-950 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-emerald-500 text-neutral-950 flex items-center justify-center font-black">
+                    <div className="w-9 h-9 rounded-full bg-emerald-500 text-neutral-950 flex items-center justify-center font-semibold">
                       <Disc3 className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-black text-base tracking-tight text-emerald-400">
+                        <span className="font-semibold text-base tracking-tight text-emerald-400">
                           Pulseify External Web Player
                         </span>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
@@ -971,7 +982,7 @@ export default function LandingPage() {
                                     publicSongs
                                   )
                                 }
-                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-extrabold text-xs transition-all"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-semibold text-xs transition-all"
                               >
                                 {playingThis ? (
                                   <>
@@ -1044,7 +1055,7 @@ const { songs, artist_of_the_month } = await readJson(response);
 
           {/* Studio credit */}
           <div className="pt-5 border-t border-white/10/70 dark:border-white/5 text-center sm:text-left">
-            <p className="text-[11px] sm:text-xs font-extrabold tracking-[0.18em] uppercase text-neutral-200 dark:text-neutral-200">
+            <p className="text-[11px] sm:text-xs font-semibold tracking-[0.18em] uppercase text-neutral-200 dark:text-neutral-200">
               Website by ZK Studio
             </p>
             <p className="mt-1.5 text-[11px] sm:text-xs font-semibold text-neutral-400 dark:text-neutral-400">

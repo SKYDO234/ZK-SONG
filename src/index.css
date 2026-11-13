@@ -2,16 +2,369 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================
+   ZK-SONG — "Onyx & Gold" design system
+   ----------------------------------------------------------------------------
+   Principles
+   1. Ink base, paper type. Depth comes from layered light, not from colour.
+   2. Gold is special. It marks state, selection and one primary action per
+      screen — never a passive nav link or a decorative border.
+   3. Editorial type: Sora for structure, Instrument Serif for emphasis,
+      JetBrains Mono for machine data.
+   ========================================================================== */
+
 @layer base {
   :root {
-    --brand-primary: #ecc257;
-    --brand-secondary: #d9a63a;
+    --gold-050: #fdf9ec;
+    --gold-100: #f9efc8;
+    --gold-200: #f1dc93;
+    --gold-300: #e6c25c;
+    --gold-400: #d8a53a;
+    --gold-500: #b98724;
+
+    --ink-0: #08080a;
+    --ink-50: #0b0b0e;
+    --ink-100: #101014;
+    --ink-200: #16161b;
+
+    --brand-primary: #e6c25c;
+    --brand-secondary: #d8a53a;
+
+    --hairline: rgba(255, 255, 255, 0.07);
+    --hairline-strong: rgba(255, 255, 255, 0.13);
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
     overflow-x: hidden;
+    background-color: var(--ink-0);
+    font-feature-settings: 'cv11' on, 'ss01' on;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgba(230, 194, 92, 0.26);
+    color: #fff;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: 'Sora', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.035em;
+  }
+
+  code,
+  pre,
+  kbd {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  /* Fine, unobtrusive scrollbar that matches the ink base. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--ink-0);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #26262e;
+    border-radius: 9999px;
+    border: 3px solid var(--ink-0);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--gold-500);
   }
 }
+
+@layer components {
+  /* ------------------------------------------------------------- surfaces -- */
+
+  /* The main panel: ink with a lit top edge. No colour, no gradient soup. */
+  .surface {
+    position: relative;
+    background:
+      radial-gradient(120% 100% at 50% 0%, rgba(255, 255, 255, 0.045) 0%, transparent 55%),
+      linear-gradient(180deg, var(--ink-100) 0%, var(--ink-50) 100%);
+    border: 1px solid var(--hairline);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 24px 60px -32px rgba(0, 0, 0, 0.9);
+  }
+
+  /* Elevated: for the hero media card and anything that should float. */
+  .surface-lift {
+    background:
+      radial-gradient(130% 100% at 50% -10%, rgba(255, 255, 255, 0.07) 0%, transparent 60%),
+      linear-gradient(180deg, #17171d 0%, #0a0a0d 100%);
+    border: 1px solid var(--hairline-strong);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.09),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.7),
+      0 40px 90px -40px rgba(0, 0, 0, 1);
+  }
+
+  /* Attention surface: the single gold-edged block on a page. */
+  .surface-gold {
+    position: relative;
+    background:
+      radial-gradient(100% 120% at 50% -20%, rgba(230, 194, 92, 0.16) 0%, transparent 62%),
+      linear-gradient(180deg, #14130f 0%, #0a0a0b 100%);
+    border: 1px solid rgba(230, 194, 92, 0.28);
+    box-shadow:
+      inset 0 1px 0 rgba(253, 249, 236, 0.14),
+      0 30px 80px -40px rgba(0, 0, 0, 1),
+      0 0 70px -40px rgba(230, 194, 92, 0.55);
+  }
+
+  /* Compatibility aliases for the pre-existing class names. */
+  .card-3d {
+    @apply surface rounded-2xl;
+  }
+  .card-3d-hover {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+  .card-3d-hover:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.09),
+      0 32px 70px -34px rgba(0, 0, 0, 1);
+  }
+  .panel-onyx {
+    @apply surface rounded-2xl;
+  }
+
+  /* --------------------------------------------------------------- type -- */
+
+  /* Editorial emphasis. Serif italic against Sora — reads as designed, not default. */
+  .accent-serif {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  .text-gold {
+    background-image: linear-gradient(180deg, #fdf9ec 0%, #e6c25c 46%, #a9761c 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-300);
+  }
+
+  .mono-data {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.75rem;
+    letter-spacing: -0.01em;
+  }
+
+  /* ------------------------------------------------------------- buttons -- */
+
+  /* Primary: brushed gold. One per screen. */
+  .btn-gold {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.875rem;
+    border: 1px solid rgba(253, 249, 236, 0.5);
+    background-image: linear-gradient(180deg, #fbf0c4 0%, #e6c25c 40%, #c1912b 76%, #a4761c 100%);
+    color: #14100a;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.75),
+      inset 0 -2px 5px rgba(110, 74, 10, 0.32),
+      0 8px 22px -12px rgba(230, 194, 92, 0.7),
+      0 1px 0 0 rgba(110, 76, 12, 0.5);
+    transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), filter 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  .btn-gold:hover:not(:disabled) {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+  }
+  .btn-gold:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow:
+      inset 0 2px 6px rgba(110, 74, 10, 0.5),
+      0 2px 10px -8px rgba(230, 194, 92, 0.5);
+  }
+  .btn-gold:disabled {
+    opacity: 0.42;
+    filter: grayscale(0.4);
+    cursor: not-allowed;
+  }
+
+  /* Secondary: ink with a hairline. This is the default button now. */
+  .btn-ink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.875rem;
+    border: 1px solid var(--hairline-strong);
+    background-image: linear-gradient(180deg, #1c1c23 0%, #0e0e12 100%);
+    color: #f2f2f4;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 6px 18px -14px rgba(0, 0, 0, 0.9);
+    transition: border-color 0.2s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1),
+      background-image 0.2s ease;
+  }
+  .btn-ink:hover:not(:disabled) {
+    border-color: rgba(255, 255, 255, 0.24);
+    background-image: linear-gradient(180deg, #232329 0%, #14141a 100%);
+    transform: translateY(-1px);
+  }
+  .btn-ink:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .btn-ink:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Tertiary: text only, for nav and inline actions. */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #a3a3ad;
+    font-weight: 500;
+    transition: color 0.18s ease;
+  }
+  .btn-ghost:hover {
+    color: #fff;
+  }
+
+  .btn-onyx {
+    @apply btn-ink;
+  }
+
+  /* -------------------------------------------------------------- fields -- */
+
+  .field {
+    width: 100%;
+    border-radius: 0.875rem;
+    border: 1px solid var(--hairline-strong);
+    background: #0a0a0d;
+    color: #f5f5f7;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  }
+  .field::placeholder {
+    color: #55555f;
+  }
+  .field:hover:not(:focus) {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  .field:focus {
+    outline: none;
+    background: #0c0c10;
+    border-color: rgba(230, 194, 92, 0.55);
+    box-shadow: 0 0 0 3px rgba(230, 194, 92, 0.1);
+  }
+
+  /* --------------------------------------------------------------- chips -- */
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 9999px;
+    border: 1px solid var(--hairline-strong);
+    background: rgba(255, 255, 255, 0.035);
+    color: #d4d4d8;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .chip-gold {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(230, 194, 92, 0.32);
+    background: rgba(230, 194, 92, 0.09);
+    color: var(--gold-200);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* --------------------------------------------------------------- rules -- */
+
+  .gold-rule {
+    height: 1px;
+    background-image: linear-gradient(90deg, transparent, rgba(230, 194, 92, 0.4), transparent);
+  }
+
+  .hairline-rule {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--hairline-strong), transparent);
+  }
+
+  /* ------------------------------------------------------------- texture -- */
+
+  /* Faint dot grid: gives large ink areas a material quality. */
+  .grid-dots {
+    background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.11) 1px, transparent 0);
+    background-size: 28px 28px;
+  }
+
+  /* Gold sweep for the Artist-of-the-Month badge. */
+  .gold-shimmer {
+    background: linear-gradient(
+      110deg,
+      #a9761c 0%,
+      #f9efc8 24%,
+      #e6c25c 48%,
+      #fdf9ec 70%,
+      #a9761c 100%
+    );
+    background-size: 220% 100%;
+    animation: shimmer 3.6s linear infinite;
+  }
+}
+
+@layer utilities {
+  .border-hairline {
+    border-color: var(--hairline);
+  }
+  .border-gold-hairline {
+    border-color: rgba(230, 194, 92, 0.28);
+  }
+  .bg-onyx {
+    background-color: var(--ink-50);
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}
+
+/* --------------------------------------------------------------- motion -- */
 
 @keyframes eqBar1 {
   0%, 100% { height: 22%; }
@@ -32,30 +385,15 @@
   50% { height: 25%; }
 }
 
-.eq-bar-1 {
-  animation: eqBar1 0.85s ease-in-out infinite;
-}
-.eq-bar-2 {
-  animation: eqBar2 0.7s ease-in-out infinite;
-}
-.eq-bar-3 {
-  animation: eqBar3 0.95s ease-in-out infinite;
-}
-.eq-bar-4 {
-  animation: eqBar4 0.78s ease-in-out infinite;
-}
+.eq-bar-1 { animation: eqBar1 0.85s ease-in-out infinite; }
+.eq-bar-2 { animation: eqBar2 0.7s ease-in-out infinite; }
+.eq-bar-3 { animation: eqBar3 0.95s ease-in-out infinite; }
+.eq-bar-4 { animation: eqBar4 0.78s ease-in-out infinite; }
 
 .aotm-gold-shimmer {
-  background: linear-gradient(
-    110deg,
-    #f59e0b 0%,
-    #fde047 28%,
-    #f97316 52%,
-    #fde047 75%,
-    #f59e0b 100%
-  );
+  background: linear-gradient(110deg, #b98724 0%, #f9efc8 28%, #d8a53a 52%, #f9efc8 75%, #b98724 100%);
   background-size: 200% 100%;
-  animation: shimmer 3s linear infinite;
+  animation: shimmer 3.6s linear infinite;
 }
 
 @keyframes fadeIn {
@@ -67,42 +405,36 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes slideUpFade {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes floatY {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-10px); }
 }
 @keyframes shimmerBg {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.25s ease-out both;
-}
-.animate-scale-in {
-  animation: scaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.animate-slide-up {
-  animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.animate-float {
-  animation: floatY 5s ease-in-out infinite;
-}
+.animate-fade-in { animation: fadeIn 0.25s ease-out both; }
+.animate-scale-in { animation: scaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-up { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-float { animation: floatY 6s ease-in-out infinite; }
+
 .skeleton {
   background: linear-gradient(
     90deg,
-    rgba(148, 163, 184, 0.15) 25%,
-    rgba(148, 163, 184, 0.3) 37%,
-    rgba(148, 163, 184, 0.15) 63%
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.09) 37%,
+    rgba(255, 255, 255, 0.04) 63%
   );
   background-size: 400% 100%;
-  animation: shimmerBg 1.4s ease infinite;
+  animation: shimmerBg 1.5s ease infinite;
 }
+
 .stagger > * {
-  animation: slideUpFade 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .stagger > *:nth-child(1) { animation-delay: 0.02s; }
 .stagger > *:nth-child(2) { animation-delay: 0.06s; }
@@ -113,273 +445,13 @@
 .stagger > *:nth-child(7) { animation-delay: 0.26s; }
 .stagger > *:nth-child(8) { animation-delay: 0.3s; }
 
-/* Custom sleek scrollbars */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.08);
-}
-.dark ::-webkit-scrollbar-track {
-  background: rgba(9, 9, 15, 0.7);
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.35);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.65);
-}
-
-/* ============================================================================
-   ZK-SONG — "Onyx & Gold" design layer
-   ----------------------------------------------------------------------------
-   Monochrome base (black, graphite, white) with gold as the only accent colour.
-   Depth comes from layered inset highlights + soft outer shadows, not from
-   colour gradients, so the 3D feel survives on both dark and light surfaces.
-   ========================================================================== */
-
-@layer base {
-  :root {
-    --gold-050: #fdf6dd;
-    --gold-100: #faeab5;
-    --gold-200: #f5d98a;
-    --gold-300: #ecc257;
-    --gold-400: #d9a63a;
-    --gold-500: #bf8724;
-    --gold-600: #96671a;
-
-    --onyx-000: #050506;
-    --onyx-050: #0a0a0b;
-    --onyx-100: #0f0f11;
-    --onyx-200: #141417;
-    --onyx-300: #1b1b1f;
-    --onyx-400: #26262b;
-
-    /* Replaces the old violet/cyan brand pair. Settings can still override these. */
-    --brand-primary: #ecc257;
-    --brand-secondary: #d9a63a;
-  }
-
-  html {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  body {
-    font-feature-settings: 'ss01' on, 'cv01' on;
-  }
-
-  /* Gold text selection instead of the browser blue. */
-  ::selection {
-    background: rgba(236, 194, 87, 0.28);
-    color: #fff;
-  }
-}
-
-@layer components {
-  /* ---------------------------------------------------------------- type -- */
-
-  .text-gold {
-    background-image: linear-gradient(180deg, #fdf3cf 0%, #ecc257 45%, #b98a25 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .text-gold-flat {
-    color: var(--gold-200);
-  }
-
-  .font-display {
-    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-    letter-spacing: -0.02em;
-  }
-
-  /* -------------------------------------------------------------- surface -- */
-
-  /* The signature card: black glass, gold hairline, lifted edge. */
-  .card-3d {
-    position: relative;
-    background-image:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.055) 0%, rgba(255, 255, 255, 0) 38%),
-      linear-gradient(165deg, #131315 0%, #0b0b0d 55%, #060607 100%);
-    border: 1px solid rgba(236, 194, 87, 0.16);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.07),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.6),
-      0 24px 70px -28px rgba(0, 0, 0, 0.95),
-      0 0 48px -26px rgba(236, 194, 87, 0.35);
-  }
-
-  /* Optional gold edge that catches light on hover. */
-  .card-3d-hover {
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 0.25s ease, border-color 0.25s ease;
-  }
-  .card-3d-hover:hover {
-    transform: translateY(-2px);
-    border-color: rgba(236, 194, 87, 0.4);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.09),
-      0 30px 80px -30px rgba(0, 0, 0, 1),
-      0 0 60px -22px rgba(236, 194, 87, 0.5);
-  }
-
-  /* Flat panel for dense admin tables — no outer glow, quieter. */
-  .panel-onyx {
-    background: linear-gradient(180deg, #101012 0%, #0a0a0c 100%);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 16px 40px -24px rgba(0, 0, 0, 0.9);
-  }
-
-  /* ---------------------------------------------------------------- rules -- */
-
-  .gold-rule {
-    height: 1px;
-    background-image: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(236, 194, 87, 0.45) 50%,
-      transparent 100%
-    );
-  }
-
-  /* --------------------------------------------------------------- buttons -- */
-
-  /* Primary action: polished metal. Light source is above, so the top edge is
-     bright and the bottom sits in shadow. */
-  .btn-gold {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    border-radius: 0.75rem;
-    border: 1px solid rgba(253, 243, 207, 0.55);
-    background-image: linear-gradient(180deg, #fbe9a8 0%, #ecc257 42%, #c1912b 78%, #a97a1e 100%);
-    color: #181207;
-    font-weight: 800;
-    letter-spacing: 0.01em;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.8),
-      inset 0 -2px 6px rgba(120, 80, 10, 0.35),
-      0 10px 24px -12px rgba(236, 194, 87, 0.75),
-      0 2px 0 0 rgba(120, 82, 12, 0.55);
-    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  }
-  .btn-gold:hover:not(:disabled) {
-    filter: brightness(1.06);
-    transform: translateY(-1px);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      inset 0 -2px 6px rgba(120, 80, 10, 0.3),
-      0 16px 34px -14px rgba(236, 194, 87, 0.9),
-      0 2px 0 0 rgba(120, 82, 12, 0.55);
-  }
-  .btn-gold:active:not(:disabled) {
-    transform: translateY(1px);
-    box-shadow:
-      inset 0 2px 6px rgba(120, 80, 10, 0.55),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.3),
-      0 4px 12px -8px rgba(236, 194, 87, 0.6);
-  }
-  .btn-gold:disabled {
-    opacity: 0.45;
-    filter: grayscale(0.35);
-    cursor: not-allowed;
-  }
-
-  /* Secondary: black glass with a gold hairline. */
-  .btn-onyx {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    border-radius: 0.75rem;
-    border: 1px solid rgba(236, 194, 87, 0.28);
-    background-image: linear-gradient(180deg, #1a1a1d 0%, #0c0c0e 100%);
-    color: var(--gold-100);
-    font-weight: 700;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 22px -14px rgba(0, 0, 0, 0.9);
-    transition: border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
-  }
-  .btn-onyx:hover:not(:disabled) {
-    border-color: rgba(236, 194, 87, 0.6);
-    color: #fff;
-    transform: translateY(-1px);
-  }
-  .btn-onyx:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  /* ---------------------------------------------------------------- fields -- */
-
-  .field {
-    width: 100%;
-    border-radius: 0.75rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: linear-gradient(180deg, #0b0b0d 0%, #070708 100%);
-    color: #f5f5f5;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
-    transition: border-color 0.18s ease, box-shadow 0.18s ease;
-  }
-  .field::placeholder {
-    color: rgba(255, 255, 255, 0.3);
-  }
-  .field:focus {
-    outline: none;
-    border-color: rgba(236, 194, 87, 0.65);
-    box-shadow:
-      inset 0 1px 3px rgba(0, 0, 0, 0.9),
-      0 0 0 3px rgba(236, 194, 87, 0.14);
-  }
-
-  /* --------------------------------------------------------------- chips -- */
-
-  .chip-gold {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    border-radius: 9999px;
-    border: 1px solid rgba(236, 194, 87, 0.35);
-    background: rgba(236, 194, 87, 0.1);
-    color: var(--gold-100);
-    font-weight: 700;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  }
-
-  /* -------------------------------------------------------------- shimmer -- */
-
-  /* Animated gold sweep used on the Artist-of-the-Month badge. */
-  .gold-shimmer {
-    background: linear-gradient(
-      110deg,
-      #b98a25 0%,
-      #fbe9a8 26%,
-      #ecc257 50%,
-      #fdf3cf 72%,
-      #b98a25 100%
-    );
-    background-size: 220% 100%;
-    animation: shimmer 3.4s linear infinite;
-  }
-}
-
-@layer utilities {
-  /* Hairline borders that read properly on pure black. */
-  .border-hairline {
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-  .border-gold-hairline {
-    border-color: rgba(236, 194, 87, 0.28);
-  }
-  .bg-onyx {
-    background-color: var(--onyx-050);
-  }
-  .shadow-gold-glow {
-    box-shadow: 0 0 40px -16px rgba(236, 194, 87, 0.55);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
