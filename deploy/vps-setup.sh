@@ -17,6 +17,8 @@ APP_DIR="/opt/zksong"
 SERVICE="zksong"
 PORT="${PORT:-4000}"
 DOMAIN="${DOMAIN:-}"
+REPO_URL="${REPO_URL:-https://github.com/SKYDO234/ZK-SONG.git}"
+BRANCH="${BRANCH:-main}"
 
 log() { printf '\n\033[1;35m▸ %s\033[0m\n' "$1"; }
 
@@ -66,7 +68,7 @@ JWT_SECRET=$JWT
 
 # Storage: this VPS keeps the SQLite database and media on local disk
 DATA_DIR=/var/lib/zksong
-UPLOADS_DIR=$APP_DIR/server/uploads
+UPLOADS_DIR=/var/lib/zksong/uploads
 MAX_UPLOAD_MB=120
 EOF
   chmod 600 /etc/zksong.env
@@ -95,7 +97,7 @@ StandardError=journal
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
-ReadWritePaths=/var/lib/zksong $APP_DIR/server/uploads
+ReadWritePaths=/var/lib/zksong
 
 [Install]
 WantedBy=multi-user.target
@@ -139,37 +141,52 @@ rm -f /etc/nginx/sites-enabled/default
 nginx -t
 systemctl reload nginx
 
+log "Fetching the application code"
+if [ -d "$APP_DIR/.git" ]; then
+  sudo -u "$APP_USER" git -C "$APP_DIR" fetch --depth 1 origin "$BRANCH"
+  sudo -u "$APP_USER" git -C "$APP_DIR" reset --hard "origin/$BRANCH"
+else
+  rm -rf "$APP_DIR"
+  sudo -u "$APP_USER" git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$APP_DIR"
+fi
+chown -R "$APP_USER:$APP_USER" "$APP_DIR"
+
+log "Installing dependencies and building the website"
+sudo -u "$APP_USER" bash -lc "cd $APP_DIR && npm ci && npm run build && npm prune --omit=dev"
+
+log "Preparing local media directories"
+sudo -u "$APP_USER" mkdir -p /var/lib/zksong/uploads/{audio,thumbnails,videos,avatars,branding}
+mkdir -p /var/backups/zksong
+chown "$APP_USER:$APP_USER" /var/backups/zksong
+
 cat <<EOF
 
 ────────────────────────────────────────────────────────────────────────────
-✅ System ready. Remaining steps (run as your normal user, not root):
+✅ System ready — code fetched, dependencies installed, website built.
 
- 1. Get the code:
-      sudo git clone <your-repo-url> $APP_DIR
-      sudo chown -R $APP_USER:$APP_USER $APP_DIR
+ Set your password, then start the service:
 
- 2. Build + start:
-      cd $APP_DIR
-      sudo -u $APP_USER npm ci
-      sudo -u $APP_USER npm run build
-      sudo nano /etc/zksong.env          # set ADMIN_PASSWORD + ALLOWED_ORIGIN
-      sudo systemctl restart $SERVICE
-      sudo systemctl status $SERVICE
+    sudo nano /etc/zksong.env      # ADMIN_PASSWORD, ALLOWED_ORIGIN
+    sudo systemctl restart $SERVICE
+    sudo systemctl status $SERVICE
+    journalctl -u $SERVICE -f
 
- 3. Check it:
+ Check it:
       curl localhost:$PORT/api/health
       curl localhost:$PORT/api/public/bootstrap
 
- 4. HTTPS (only after the domain's DNS A record points here):
+ HTTPS (only after the domain's DNS A record points here):
       sudo certbot --nginx -d ${DOMAIN:-your-domain.com}
 
- 5. Backups (database + media together):
-      sudo -u $APP_USER tar czf /var/lib/zksong/backup-\$(date +%F).tar.gz \\
-        $APP_DIR/server/data $APP_DIR/server/uploads
+ Backups (database + media together):
+      sudo mkdir -p /var/backups/zksong
+      sudo -u $APP_USER tar czf /var/backups/zksong/backup-\$(date +%F).tar.gz \\
+        /var/lib/zksong
 
- Logs & updates:
+ Update the site later:
+      sudo bash $APP_DIR/deploy/vps-setup.sh   # re-run: fetches, builds, keeps data
+
+ Logs:
       journalctl -u $SERVICE -f
-      cd $APP_DIR && sudo -u $APP_USER git pull && sudo -u $APP_USER npm ci \\
-        && sudo -u $APP_USER npm run build && sudo systemctl restart $SERVICE
 ────────────────────────────────────────────────────────────────────────────
 EOF

@@ -11,6 +11,9 @@
 // ============================================================================
 
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import {
@@ -1714,7 +1717,17 @@ export function createApi({ db, storage, env = process.env }) {
       return redirect(storage.publicUrl(`${c.params.folder}/${c.params.filename}`), 302);
     }
     const key = `${c.params.folder}/${c.params.filename}`;
-    if (!storage.exists(key)) throw notFound('Media file not found');
+    if (!storage.exists(key)) {
+      // The bundled branding artwork also ships in public/. This keeps the logo
+      // working when UPLOADS_DIR points outside the checkout (VPS/Docker layout).
+      const bundled = bundledAsset(key);
+      if (bundled) {
+        return file(bundled, {
+          headers: { 'Content-Type': mimeFor(key), 'Cache-Control': 'public, max-age=86400' },
+        });
+      }
+      throw notFound('Media file not found');
+    }
     return file(storage.absolutePath(key), {
       headers: { 'Content-Type': mimeFor(c.params.filename), 'Cache-Control': 'public, max-age=3600' },
     });
@@ -1730,6 +1743,24 @@ export function createApi({ db, storage, env = process.env }) {
 }
 
 /* ---------------------------------------------------------------- utils -- */
+
+/** Repository root, derived from this file's location (api/_lib/app.js). */
+const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(MODULE_DIR, '..', '..');
+
+/** Where first-party static assets may live (source checkout and built app). */
+function siteRoots() {
+  return [path.join(REPO_ROOT, 'public'), path.join(REPO_ROOT, 'dist')];
+}
+
+/** First-shipped asset for a media key, if one exists (e.g. branding/zk-logo.svg). */
+function bundledAsset(key) {
+  for (const root of siteRoots()) {
+    const candidate = path.join(root, 'uploads', key);
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
+  }
+  return null;
+}
 
 function ext(value) {
   const m = String(value || '').match(/\.[a-z0-9]+$/i);
