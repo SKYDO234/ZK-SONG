@@ -76,6 +76,7 @@ export function createSupabaseStorage({
      * Returns { uploadUrl, token, path, publicUrl }.
      */
     async createSignedUpload(objectKey, { upsert = false } = {}) {
+      await this.ensureBucket();
       const objectPath = cleanKey(objectKey);
       const body = await api(`/object/upload/sign/${bucket}/${objectPath}`, {
         method: 'POST',
@@ -103,6 +104,7 @@ export function createSupabaseStorage({
     },
 
     async receiveFile({ key: objectKey, stream, contentType }) {
+      await this.ensureBucket();
       const objectPath = cleanKey(objectKey);
       // Buffer in memory only for small server-side writes (logo/branding).
       const chunks = [];
@@ -125,7 +127,6 @@ export function createSupabaseStorage({
       if (!res.ok) {
         throw new Error(`Supabase upload failed (${res.status}): ${await res.text()}`);
       }
-      await this.ensurePublicReadPolicy();
       return { size };
     },
 
@@ -146,25 +147,46 @@ export function createSupabaseStorage({
       return { size: Number(res.headers.get('content-length') || 0) };
     },
 
-    /** Let anyone read public media (idempotent, cached per container). */
-    async ensurePublicReadPolicy() {
-      if (this._policyChecked) return;
-      this._policyChecked = true;
-      try {
-        await api(`/bucket/${bucket}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+    /**
+     * Make sure the bucket exists and is publicly readable.
+     * Runs once per container; safe to call before every upload.
+     */
+    async ensureBucket() {
+      if (!this._bucketReady) {
+        this._bucketReady = (async () => {
+          const body = {
             public: true,
             allowedMimeTypes: null,
-            fileSizeLimit: String(
-              Number(process.env.MAX_UPLOAD_MB || 120) * 1024 * 1024
-            ),
-          }),
+            fileSizeLimit: String(Number(process.env.MAX_UPLOAD_MB || 120) * 1024 * 1024),
+          };
+          try {
+            // Does it already exist?
+            await api(`/bucket/${bucket}`, { method: 'GET' });
+            await api(`/bucket/${bucket}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            });
+          } catch (err) {
+            if (err.status !== 404 && err.status !== 400) throw err;
+            // Create it (first deploy).
+            await api('/bucket', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: bucket, name: bucket, ...body }),
+            });
+          }
+        })().catch((err) => {
+          this._bucketReady = null;
+          console.warn('[ZK-SONG] Could not prepare the storage bucket:', err.message);
         });
-      } catch (err) {
-        console.warn('[ZK-SONG] Could not mark media bucket public:', err.message);
       }
+      return this._bucketReady;
+    },
+
+    /** @deprecated kept for callers from the earlier API */
+    async ensurePublicReadPolicy() {
+      return this.ensureBucket();
     },
   };
 }
