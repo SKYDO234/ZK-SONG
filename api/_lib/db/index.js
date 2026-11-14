@@ -394,8 +394,33 @@ function poolerCandidates(raw, env = process.env) {
     out.push({ url: next.toString(), host: next.hostname });
   }
 
-  // Try the configured host last: it failed, but a transient blip is possible.
+  // The direct endpoint is a genuinely different route: it bypasses Supavisor
+  // entirely, and is the only one that works when this runtime has IPv6 egress
+  // but no working pooler route. Username is plain `postgres` there.
+  const ref = projectRefFromUrl(raw);
+  if (ref) {
+    const direct = new URL(u.toString());
+    direct.hostname = `db.${ref}.supabase.co`;
+    direct.username = 'postgres';
+    if (!u.port || u.port === '5432' || u.port === '6543') direct.port = '5432';
+    out.push({ url: direct.toString(), host: direct.hostname, kind: 'direct' });
+  }
+
   return out;
+}
+
+/** Project ref, from either the pooler username or a direct hostname. */
+function projectRefFromUrl(raw) {
+  try {
+    const u = new URL(raw);
+    const fromUser = /^postgres\.([a-z0-9]{16,})$/i.exec(decodeURIComponent(u.username));
+    if (fromUser) return fromUser[1];
+    const fromHost = /^db\.([a-z0-9]{16,})\.supabase\.co$/i.exec(u.hostname);
+    if (fromHost) return fromHost[1];
+  } catch {
+    /* ignore */
+  }
+  return '';
 }
 
 /* ------------------------------------------------------------- bootstrap -- */
