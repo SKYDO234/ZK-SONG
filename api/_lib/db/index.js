@@ -357,6 +357,72 @@ async function recoverCredentials({ fetchImpl = fetch, env = process.env } = {})
   }
 }
 
+/* --------------------------------------------------- connection fallbacks -- */
+
+/**
+ * Candidate endpoints to try when the configured one does not answer.
+ *
+ * Supabase fronts every project in a region with several shared pooler
+ * clusters (`aws-0`, `aws-1`, …). Which index serves a given project is not
+ * derivable from the region, and the wrong one resolves in DNS and then hangs.
+ * Rather than ask the operator to discover this by trial and error, try the
+ * siblings for the same project and keep the first that connects.
+ *
+ * Only the host changes: user, password, port and database stay as configured,
+ * so a success still proves the credentials are right.
+ */
+function poolerCandidates(raw, env = process.env) {
+  if (!raw) return [];
+  let u;
+  try {
+    u = new URL(raw);
+  } catch {
+    return [];
+  }
+  const m = /^(aws|gcp)-(\d+)(-[a-z0-9-]+)?\.pooler\.supabase\.com$/i.exec(u.hostname);
+  if (!m) return [];
+
+  const [, brand, index, region = ''] = m;
+  const configured = Number(index);
+  const max = Number(env.PG_POOLER_MAX_INDEX || 3);
+  const out = [];
+
+  for (let i = 0; i <= max; i += 1) {
+    if (i === configured) continue;
+    const next = new URL(u.toString());
+    next.hostname = `${brand}-${i}${region}.pooler.supabase.com`;
+    out.push({ url: next.toString(), host: next.hostname });
+  }
+
+  // The direct endpoint is a genuinely different route: it bypasses Supavisor
+  // entirely, and is the only one that works when this runtime has IPv6 egress
+  // but no working pooler route. Username is plain `postgres` there.
+  const ref = projectRefFromUrl(raw);
+  if (ref) {
+    const direct = new URL(u.toString());
+    direct.hostname = `db.${ref}.supabase.co`;
+    direct.username = 'postgres';
+    if (!u.port || u.port === '5432' || u.port === '6543') direct.port = '5432';
+    out.push({ url: direct.toString(), host: direct.hostname, kind: 'direct' });
+  }
+
+  return out;
+}
+
+/** Project ref, from either the pooler username or a direct hostname. */
+function projectRefFromUrl(raw) {
+  try {
+    const u = new URL(raw);
+    const fromUser = /^postgres\.([a-z0-9]{16,})$/i.exec(decodeURIComponent(u.username));
+    if (fromUser) return fromUser[1];
+    const fromHost = /^db\.([a-z0-9]{16,})\.supabase\.co$/i.exec(u.hostname);
+    if (fromHost) return fromHost[1];
+  } catch {
+    /* ignore */
+  }
+  return '';
+}
+
 /* ------------------------------------------------------------- bootstrap -- */
 
 /**
@@ -426,35 +492,17 @@ export async function getStore() {
 
   // Connect first: a stored password that no longer matches must fail HERE,
   // where the message is specific, not later as a vague query error.
+  let store = created;
   try {
-    await assertConnection(created);
+    await assertConnection(store);
   } catch (err) {
-    if (dialect !== 'postgres' || err.reason !== 'auth') throw err;
-
-    // One retry with the platform's stored password, so a placeholder or an
-    // un-encoded character does not leave the deployment permanently down.
-    const repaired = await recoverCredentials();
-    if (!repaired) throw err;
-
-    await created.close().catch(() => {});
-    const retry = await createPgStore({ bootstrap: null, connectionString: repaired.url });
-    try {
-      await assertConnection(retry);
-    } catch (again) {
-      throw again;
-    }
-    globalThis.__zksongCredentialRecovery = repaired.reason;
-
-    await retry.ensureSchema();
-    await bootstrapAdmin(retry);
-    singleton = retry;
-    return singleton;
+    store = await recoverFromFailure(err, dialect);
   }
 
-  await created.ensureSchema();
-  await bootstrapAdmin(created);
+  await store.ensureSchema();
+  await bootstrapAdmin(store);
 
-  singleton = created;
+  singleton = store;
   return singleton;
 }
 
@@ -469,7 +517,8 @@ async function assertConnection(store) {
     await store.get('select 1 as ok');
   } catch (err) {
     const code = err?.code || '';
-    if (code === '28P01' || /password authentication failed/i.test(err?.message || '')) {
+    const msg = String(err?.message || '');
+    if (code === '28P01' || /password authentication failed/i.test(msg)) {
       err.reason = 'auth';
     } else if (code === 'ENOTFOUND' || code === 'EAI_AGAIN') {
       err.reason = 'dns';
@@ -477,11 +526,61 @@ async function assertConnection(store) {
       err.reason = 'ipv6';
     } else if (code === 'ECONNREFUSED') {
       err.reason = 'refused';
-    } else if (code === 'ETIMEDOUT' || /timeout/i.test(err?.message || '')) {
+    } else if (
+      code === 'ETIMEDOUT' ||
+      /timeout/i.test(msg) ||
+      /connection terminated/i.test(msg)
+    ) {
       err.reason = 'timeout';
     }
     throw err;
   }
+}
+
+/**
+ * Try to turn a failed connection into a working one.
+ *
+ * Two independent problems are recoverable without the operator changing
+ * anything:
+ *   - the password is a placeholder or badly encoded  -> ask the platform for it
+ *   - the pooler cluster index is wrong for the project -> try its siblings
+ *
+ * Throws the original error when neither applies, so nothing is masked.
+ */
+async function recoverFromFailure(original, dialect) {
+  if (dialect !== 'postgres') throw original;
+
+  // 1. Credentials.
+  if (original.reason === 'auth') {
+    const repaired = await recoverCredentials();
+    if (repaired) {
+      const retry = await createPgStore({ bootstrap: null, connectionString: repaired.url });
+      try {
+        await assertConnection(retry);
+        globalThis.__zksongCredentialRecovery = repaired.reason;
+        return retry;
+      } catch {
+        await retry.close().catch(() => {});
+      }
+    }
+    throw original;
+  }
+
+  // 2. Endpoint. A wrong pooler cluster resolves in DNS and then hangs.
+  if (['timeout', 'refused', 'ipv6', 'dns'].includes(original.reason)) {
+    for (const candidate of poolerCandidates(databaseUrl())) {
+      const next = await createPgStore({ bootstrap: null, connectionString: candidate.url });
+      try {
+        await assertConnection(next);
+        globalThis.__zksongEndpointFallback = candidate.host;
+        return next;
+      } catch {
+        await next.close().catch(() => {});
+      }
+    }
+  }
+
+  throw original;
 }
 
 /** Test helper: drop the memoised store (does not close it). */
